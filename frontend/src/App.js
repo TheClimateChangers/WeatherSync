@@ -1,28 +1,70 @@
 import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import axios from "axios";
 
-function App() {
-  const [helloMessage, setHelloMessage] = useState("");
-  const [marksMessage, setMarksMessage] = useState("");
+// Home component
+const Home = () => {
+  return (
+    <div>
+      <h1>WeatherSync Team Messages:</h1>
+      <nav>
+        <ul>
+          <li><Link to="/hello">View Hello Message</Link></li>
+          <li><Link to="/mark">View Mark's Message</Link></li>
+        </ul>
+      </nav>
+    </div>
+  );
+};
+
+// Hello Message component
+const HelloMessage = () => {
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Fetch the Hello World message
     axios.get("http://127.0.0.1:8000/api/hello/")
-      .then(response => setHelloMessage(response.data.message))
+      .then(response => setMessage(response.data.message))
       .catch(error => console.error("Error fetching hello message:", error));
+  }, []);
 
-    // Fetch Mark's message
+  return (
+    <div>
+      <h2>Hello Message</h2>
+      <p>{message}</p>
+      <Link to="/">Back to Home</Link>
+    </div>
+  );
+};
+
+// Mark's Message component
+const MarksMessage = () => {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
     axios.get("http://127.0.0.1:8000/api/mark/")
-      .then(response => setMarksMessage(response.data.message))
+      .then(response => setMessage(response.data.message))
       .catch(error => console.error("Error fetching marks message:", error));
   }, []);
 
   return (
     <div>
-      <h1>Backend Responses:</h1>
-      <p>{helloMessage}</p>  {/* Display Hello World message */}
-      <p>{marksMessage}</p>  {/* Display Mark's message */}
+      <h2>Mark's Message</h2>
+      <p>{message}</p>
+      <Link to="/">Back to Home</Link>
     </div>
+  );
+};
+
+// Main App component
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/hello" element={<HelloMessage />} />
+        <Route path="/mark" element={<MarksMessage />} />
+      </Routes>
+    </Router>
   );
 }
 
