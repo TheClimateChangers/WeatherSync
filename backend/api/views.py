@@ -5,3 +5,6 @@ def hello_world(request):
 
 def marks_message(request):
     return JsonResponse({"message": "Mark's Message: Hey everyone!"})
+
+def julians_message(request):
+    return JsonResponse({"message": "Julian's Message: best swe"})
