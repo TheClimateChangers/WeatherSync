@@ -8,3 +8,12 @@ def marks_message(request):
 
 def julians_message(request):
     return JsonResponse({"message": "Julian's Message: best swe"})
+
+def michaels_message(request):
+    return JsonResponse({"message": "Michael's Message: yo"})
+
+def giselles_message(request):
+    return JsonResponse({"message": "Giselle's Message: yo"})
+
+def nates_message(request):
+    return JsonResponse({"message": "Nate's Message: what's up guys!"})
