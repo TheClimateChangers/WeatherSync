@@ -1,2 +1,15 @@
 2/16
 dev branch created
+
+2/23
+.gitignore to ignore pycache
+replaced files in main to dev
+added .env file in frontend/, still working on npm start issue
+notes:
+BACKEND SERVER: cd backend
+python manage.py runserver
+FRONTEND SERVER:
+(gitbash) export NODE_OPTIONS=--openssl-legacy-provider
+(cmd) set NODE_OPTIONS=--openssl-legacy-provider
+(powershell) $env:NODE_OPTIONS="--openssl-legacy-provider"
+npm start
