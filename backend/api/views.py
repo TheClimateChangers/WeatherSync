@@ -10,7 +10,7 @@ def julians_message(request):
     return JsonResponse({"message": "Julian's Message: best swe"})
 
 def michaels_message(request):
-    return JsonResponse({"message": "Michael's Message: yo"})
+    return JsonResponse({"message": "Michael's Message: Merry Christmas"})
 
 def giselles_message(request):
     return JsonResponse({"message": "Giselle's Message: yo"})
