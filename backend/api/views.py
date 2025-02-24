@@ -16,4 +16,4 @@ def giselles_message(request):
     return JsonResponse({"message": "Giselle's Message: Happy to be here :)"})
 
 def nates_message(request):
-    return JsonResponse({"message": "Nate's Message: what's up guys!"})
+    return JsonResponse({"message": "Nate's Message: hey what's up guys!"})
