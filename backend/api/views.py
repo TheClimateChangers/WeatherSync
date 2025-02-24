@@ -13,7 +13,7 @@ def michaels_message(request):
     return JsonResponse({"message": "Michael's Message: yo"})
 
 def giselles_message(request):
-    return JsonResponse({"message": "Giselle's Message: yo"})
+    return JsonResponse({"message": "Giselle's Message: Happy to be here :)"})
 
 def nates_message(request):
     return JsonResponse({"message": "Nate's Message: what's up guys!"})
