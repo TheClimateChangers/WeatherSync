@@ -4,3 +4,4 @@ django-cors-headers==3.10.0
 pytz==2025.1
 psycopg2==2.9.10
 psycopg2-binary==2.9.10
+numpy
