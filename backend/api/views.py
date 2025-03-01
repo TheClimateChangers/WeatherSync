@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from .db_utils import fetch_events_from_db
+import numpy as np
 
 def hello_world(request):
     return JsonResponse({"message": "Hello, World!"})
@@ -28,3 +29,16 @@ def get_events_psycopg2(request):
         "start_time": event[2]
     } for event in events]
     return JsonResponse(event_list, safe=False)
+
+def calc_trip_costs(request):
+    """
+    Simulates trip cost calculation. 
+    takes list of random trip costs and computes average
+    """
+    trip_costs = np.array([150, 200, 175, 225, 300])
+    avg_cost = np.mean(trip_costs)
+
+    return JsonResponse({
+        "trip_costs": trip_costs.tolist(),
+        "average_trip_cost": round(avg_cost, 2)
+})
