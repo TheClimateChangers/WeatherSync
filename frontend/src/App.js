@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import axios from "axios";
+import TripMap from "./components/TripMap";
 
 // Home component
 const Home = () => {
@@ -17,6 +18,8 @@ const Home = () => {
           <li><Link to="/nate">View Nate's Message</Link></li>
         </ul>
       </nav>
+      <h2>TripSync Map</h2>
+      <TripMap />
     </div>
   );
 };
