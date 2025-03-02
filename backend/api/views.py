@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from .db_utils import fetch_events_from_db
 import numpy as np
+import polyline
 from geopy.geocoders import Nominatim
 
 def hello_world(request):
@@ -53,3 +54,16 @@ def get_coordinates(request):
         return JsonResponse({"city": city, "latitude": location.latitude, "longitude": location.longitude})
     else:
         return JsonResponse({"error": "Location not found"}, status=404)
+    
+
+def encode_route(request):
+    """Encodes a travel route into polyline format."""
+    coords_str = request.GET.get("coords")
+    if not coords_str:
+        return JsonResponse({"error": "Provide coordinates in 'lat,lng;lat,lng' format"}, status=400)
+
+    try:
+        coords = [tuple(map(float, c.split(','))) for c in coords_str.split(';')]
+        return JsonResponse({"encoded_polyline": polyline.encode(coords)})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
