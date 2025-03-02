@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from .db_utils import fetch_events_from_db
 import numpy as np
+import pandas as pd
 import polyline
 from geopy.geocoders import Nominatim
 
@@ -67,3 +68,10 @@ def encode_route(request):
         return JsonResponse({"encoded_polyline": polyline.encode(coords)})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+    
+def estimate_trip_cost(expenses):
+    df = pd.DataFrame(expenses, columns=["Category", "Cost"])
+    return df["Cost"].sum()
+
+expenses = [["Hotel", 200], ["Flight", 150], ["Food", 50]]
+print(estimate_trip_cost(expenses))

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import hello_world, marks_message, julians_message, michaels_message, giselles_message, nates_message, get_events_psycopg2, calc_trip_costs, get_coordinates, encode_route
+from .views import hello_world, marks_message, julians_message, michaels_message, giselles_message, nates_message, get_events_psycopg2, calc_trip_costs, get_coordinates, encode_route, estimate_trip_cost
 
 urlpatterns = [
     path('hello/', hello_world),
@@ -12,4 +12,5 @@ urlpatterns = [
     path("trip-costs-numpy/", calc_trip_costs, name="calc_trip_costs"),
     path("coordinates/", get_coordinates, name="get_coordinates"),
     path('encode-route/', encode_route, name='encode_route'),
+    path('estimate-trip-cost-pandas/', estimate_trip_cost, name='estimate_trip_costs'),
 ]
