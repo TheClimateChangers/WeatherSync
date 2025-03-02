@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from .db_utils import fetch_events_from_db
 import numpy as np
+from geopy.geocoders import Nominatim
 
 def hello_world(request):
     return JsonResponse({"message": "Hello, World!"})
@@ -43,10 +44,12 @@ def calc_trip_costs(request):
         "average_trip_cost": round(avg_cost, 2)
 })
 
-def location_list(request):
-    locations = [
-        {"name": "San Francisco", "latitude": 37.7749, "longitude": -122.4194},
-        {"name": "New York", "latitude": 40.7128, "longitude": -74.0060},
-        {"name": "Los Angeles", "latitude": 34.0522, "longitude": -118.2437},
-    ]
-    return JsonResponse(locations, safe=False)
+def get_coordinates(request):
+    city = request.GET.get("city", "San Francisco")  # Default city if none provided
+    geolocator = Nominatim(user_agent="weather_sync")
+    location = geolocator.geocode(city)
+    
+    if location:
+        return JsonResponse({"city": city, "latitude": location.latitude, "longitude": location.longitude})
+    else:
+        return JsonResponse({"error": "Location not found"}, status=404)

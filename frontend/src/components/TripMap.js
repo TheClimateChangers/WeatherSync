@@ -1,37 +1,50 @@
-import React from "react";
+import React, { useState } from "react";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
-
+import axios from "axios";
 
 const mapContainerStyle = {
   height: "400px",
   width: "100%",
 };
 
-
 const defaultCenter = {
   lat: 37.7749,
-  lng: -122.4194
+  lng: -122.4194,
 };
-
 
 const TripMap = () => {
-  const locations = [
-    { name: "San Francisco", lat: 37.7749, lng: -122.4194 },
-    { name: "New York", lat: 40.7128, lng: -74.0060 },
-    { name: "Los Angeles", lat: 34.0522, lng: -118.2437 }
-  ];
+  const [location, setLocation] = useState(null);
+  const [city, setCity] = useState("");
 
+  const fetchCoordinates = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/get-coordinates?city=${city}`);
+      setLocation(response.data);
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+    }
+  };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyBEPK0j_w8O5TABTnV62Cjv-IpJ3ISDqrk">
-      <GoogleMap mapContainerStyle={mapContainerStyle} center={defaultCenter} zoom={5}>
-        {locations.map((loc, index) => (
-          <Marker key={index} position={{ lat: loc.lat, lng: loc.lng }} />
-        ))}
-      </GoogleMap>
-    </LoadScript>
+    <div>
+      <input 
+        type="text" 
+        placeholder="Enter city name" 
+        value={city} 
+        onChange={(e) => setCity(e.target.value)} 
+      />
+      <button onClick={fetchCoordinates}>Get Coordinates</button>
+      <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
+        <GoogleMap 
+          mapContainerStyle={mapContainerStyle} 
+          center={location ? { lat: location.latitude, lng: location.longitude } : defaultCenter} 
+          zoom={location ? 10 : 5}
+        >
+          {location && <Marker position={{ lat: location.latitude, lng: location.longitude }} />}
+        </GoogleMap>
+      </LoadScript>
+    </div>
   );
 };
-
 
 export default TripMap;
