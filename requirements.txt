@@ -8,3 +8,5 @@ numpy
 geopy
 polyline
 pandas
+requests
+python-dotenv
