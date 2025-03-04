@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import hello_world, marks_message, julians_message, michaels_message, giselles_message, nates_message, get_events_psycopg2, calc_trip_costs, get_coordinates, encode_route, estimate_trip_cost
-
+from .views import *
 urlpatterns = [
     path('hello/', hello_world),
     path('mark/', marks_message),  # New route for Mark's message
