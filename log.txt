@@ -17,3 +17,7 @@ npm start
 3/1
 Added google maps
 npm install @react-google-maps/api
+
+3/9
+firebase for authentication
+npm install firebase
