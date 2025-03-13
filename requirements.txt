@@ -10,3 +10,4 @@ polyline
 pandas
 requests
 python-dotenv
+djangorestframework
