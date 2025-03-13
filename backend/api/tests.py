@@ -83,3 +83,68 @@ class WeatherServiceTest(TestCase):
         self.assertIsNone(weather.get('temperature'))
         self.assertIsNone(weather.get('rain_chance'))
 
+
+    # Test 4
+    @patch('requests.get')
+    def test_weather_data_validation(self, mock_get):
+        """Test weather data validation and processing logic"""
+        from .services import WeatherService
+        
+        # Test case 1: Valid temperature range
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'main': {
+                'temp': 25.5,
+                'humidity': 65
+            },
+            'weather': [
+                {
+                    'main': 'Clear',
+                    'description': 'clear sky'
+                }
+            ],
+            'clouds': {
+                'all': 10
+            },
+            'wind': {
+                'speed': 5.2
+            }
+        }
+        mock_get.return_value = mock_response
+        
+        # Test normal weather conditions
+        weather = WeatherService.fetch_weather('London')
+        self.assertEqual(weather['temperature'], 25.5)
+        self.assertEqual(weather['location'], 'London')
+        self.assertEqual(weather['rain_chance'], 0.1)  # 10% cloud coverage
+        self.assertEqual(weather['weather_conditions']['main'], 'Clear')
+        self.assertEqual(weather['weather_conditions']['wind_speed'], 5.2)
+        
+        # Test case 2: Extreme weather conditions
+        mock_response.json.return_value = {
+            'main': {
+                'temp': -50.0,
+                'humidity': 85
+            },
+            'weather': [
+                {
+                    'main': 'Snow',
+                    'description': 'heavy snow'
+                }
+            ],
+            'clouds': {
+                'all': 100
+            },
+            'wind': {
+                'speed': 20.0
+            }
+        }
+        
+        # Test extreme weather conditions
+        weather = WeatherService.fetch_weather('Antarctica')
+        self.assertEqual(weather['temperature'], -50.0)
+        self.assertEqual(weather['rain_chance'], 1.0)  # 100% cloud coverage
+        self.assertEqual(weather['weather_conditions']['main'], 'Snow')
+        self.assertEqual(weather['weather_conditions']['wind_speed'], 20.0)
+
