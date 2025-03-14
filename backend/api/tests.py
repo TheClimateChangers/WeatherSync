@@ -148,3 +148,23 @@ class WeatherServiceTest(TestCase):
         self.assertEqual(weather['weather_conditions']['main'], 'Snow')
         self.assertEqual(weather['weather_conditions']['wind_speed'], 20.0)
 
+    # Test 5
+    @patch('requests.get')
+    def test_fetch_weather_missing_keys(self, mock_get):
+        """Test fetching weather with missing essential keys in API response"""
+        from .services import WeatherService
+        
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'weather': [],  # Missing 'main' and 'wind' data
+            'clouds': {
+                'all': 50
+            }
+        }
+        mock_get.return_value = mock_response
+        
+        weather = WeatherService.fetch_weather('UnknownCity')
+        self.assertIsNone(weather.get('temperature'))
+        self.assertIsNone(weather.get('weather_conditions'))
+        self.assertEqual(weather.get('rain_chance'), 0.5)  # 50% cloud coverage
