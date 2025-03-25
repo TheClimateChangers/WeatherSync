@@ -1,0 +1,39 @@
+name: Django CI/CD with GitHub Actions
+
+on:
+  push:
+    branches: [ "mark-dev" ]  # we can change to main later if we merge everything from dev
+  pull_request:
+    branches: [ "mark-dev" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install SSH Key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: SSH into EC2 and Run Deploy Script
+      uses: appleboy/ssh-action@v0.1.4
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu  # Or ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          cd ~/WeatherSync/backend
+          pkill -f "manage.py runserver"
+          git checkout mark-dev
+          git pull
+          pip install -r requirements.txt
+          nohup python3 manage.py runserver 0.0.0.0:8080 > backend.log 2>&1 &
+          cd ~/WeatherSync/frontend
+          pkill -f "npm run dev"
+          nohup npm run dev -- --host 0.0.0.0 > frontend.log 2>&1 &
