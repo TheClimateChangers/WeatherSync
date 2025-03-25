@@ -29,6 +29,7 @@ jobs:
         port: 22
         script: |
           cd ~/WeatherSync/backend
+          source env/bin/activate
           pkill -f "manage.py runserver"
           git checkout mark-dev
           git pull
