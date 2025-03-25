@@ -14,17 +14,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Install SSH Key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
     - name: SSH into EC2 and Run Deploy Script
       uses: appleboy/ssh-action@v0.1.4
       with:
         host: ${{ secrets.EC2_HOST }}
-        username: ubuntu  # Or ec2-user
+        username: ec2-user  # Or ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
         script: |
