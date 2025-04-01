@@ -105,7 +105,7 @@ DATABASES = {
 
         "USER": os.getenv("DB_USER"),
 
-        "PASSWORD": os.getenv("123"),
+        "PASSWORD": os.getenv(123),
 
         "HOST": os.getenv("DB_HOST"),
 
