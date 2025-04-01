@@ -171,3 +171,10 @@ class WeatherService:
         except Exception as e:
             print(f"Error saving weather data: {e}")
             return None
+        
+    @staticmethod
+    def get_weather_summary(location):
+        data = WeatherService.fetch_weather(location)
+        temp = data.get('temperature')
+        condition = data.get('weather_conditions', {}).get('main', 'Unknown')
+        return f"{location}: {condition}, {temp}°C"

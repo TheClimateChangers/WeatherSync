@@ -168,3 +168,37 @@ class WeatherServiceTest(TestCase):
         self.assertIsNone(weather.get('temperature'))
         self.assertIsNone(weather.get('weather_conditions'))
         self.assertEqual(weather.get('rain_chance'), 0.5)  # 50% cloud coverage
+class WeatherSummaryTest(TestCase):
+    """Test get_weather_summary using patched requests.get like teammates"""
+
+    @patch('requests.get')
+    def test_get_weather_summary(self, mock_get):
+        from .services import WeatherService
+
+        # Setup mock response for requests.get
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'main': {
+                'temp': 22.0,
+                'humidity': 70
+            },
+            'weather': [
+                {
+                    'main': 'Clear',
+                    'description': 'clear sky'
+                }
+            ],
+            'clouds': {
+                'all': 5
+            },
+            'wind': {
+                'speed': 3.0
+            }
+        }
+        mock_get.return_value = mock_response
+
+        # Now test get_weather_summary (which uses fetch_weather inside)
+        summary = WeatherService.get_weather_summary('Los Angeles')
+
+        self.assertEqual(summary, 'Los Angeles: Clear, 22.0°C')
