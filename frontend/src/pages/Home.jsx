@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import TripMap from "../components/TripMap";
+//import TripMap from "../components/TripMap";
 //import logo from "../assets/logo.png"; // Make sure to add your logo inside /assets
 
 function Home() {
