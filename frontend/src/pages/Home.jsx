@@ -16,7 +16,7 @@ const Home = () => {
       <div className="banner">
         <div className="banner-overlay">
           <h1>Plan Your Next Adventure</h1>
-          <Link to="/Plan">
+          <Link to="/plan">
             <button className="plan-trip-button">Plan Trip</button>
           </Link>
         </div>

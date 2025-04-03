@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Home from "./pages/Home"
+import Plan from "./pages/Plan"
 import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 
@@ -32,6 +33,7 @@ function App() {
         <Route path="/logout" element={<Logout />}/>
         <Route path="/register" element={<RegisterAndLogout />}/>
         <Route path="/home-dev" element={<Home />} />
+        <Route path="/plan" element={<Plan />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
