@@ -7,21 +7,24 @@ import Plan from "./pages/Plan"
 import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 
+
 function Logout() {
   localStorage.clear();
   return <Navigate to="/login" />
 }
+
 
 function RegisterAndLogout() {
   localStorage.clear()
   return <Register />
 }
 
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route 
+        <Route
           path="/"
           element={
             <ProtectedRoute>
@@ -39,5 +42,6 @@ function App() {
     </BrowserRouter>
   )
 }
+
 
 export default App
