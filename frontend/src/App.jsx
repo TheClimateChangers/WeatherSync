@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import Plan from "./pages/Plan"
 import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
+import Layout from "./components/Layout"
 
 
 function Logout() {
@@ -24,6 +25,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Layout />}/>
         <Route
           path="/"
           element={
