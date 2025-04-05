@@ -24,18 +24,21 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          {/* ✅ Unprotected Home now at /home */}
-          <Route path="home" element={<Home />} />
-
-          {/* Auth routes */}
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<RegisterAndLogout />} />
-          <Route path="logout" element={<Logout />} />
-
-          {/* Fallback */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
+        <Route 
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Layout />}></Route>
+        <Route path="/login" element={<Login />}/>
+        <Route path="/logout" element={<Logout />}/>
+        <Route path="/register" element={<RegisterAndLogout />}/>
+        <Route path="/home-dev" element={<Home />} />
+        <Route path="/plan" element={<Plan />} />
+        <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
   );
