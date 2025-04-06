@@ -157,3 +157,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Import local settings
+try:
+    from .local_settings import *
+except ImportError:
+    pass
