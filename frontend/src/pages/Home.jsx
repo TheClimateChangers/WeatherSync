@@ -51,7 +51,7 @@ function Home() {
         <div>
             <div style={{ backgroundColor: '#3498db', color: 'white', padding: '20px', marginBottom: '20px', textAlign: 'center', borderRadius: '5px' }}>
                 <h1>WeatherSync</h1>
-                <p>Version 1.0 - Deployed with CI/CD Pipeline!</p>
+                <p>Version 2 Test</p>
             </div>
             <div>
                 <h2>Notes</h2>
