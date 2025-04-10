@@ -1,17 +1,12 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from rest_framework import generics, status
-from rest_framework.response import Response
+from rest_framework import generics
 from .serializers import UserSerializer, NoteSerializer, WeatherDataSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Note, WeatherData
 import requests
 import os
-import logging
 from django.conf import settings
-import json
-
-logger = logging.getLogger(__name__)
 
 # Create your views here.
 class NoteListCreate(generics.ListCreateAPIView):
@@ -51,90 +46,31 @@ class WeatherDataView(generics.ListCreateAPIView):
             return WeatherData.objects.filter(location=location).order_by('-timestamp')[:1]
         return WeatherData.objects.none()
 
-    def list(self, request, *args, **kwargs):
-        try:
-            location = request.query_params.get('location')
-            if not location:
-                return Response(
-                    {"error": "Location parameter is required"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            queryset = self.get_queryset()
-            if not queryset.exists():
-                return self.fetch_and_save_weather(location)
-            
-            serializer = self.get_serializer(queryset.first())
-            return Response(serializer.data)
-        except Exception as e:
-            logger.error(f"Error in list view: {str(e)}", exc_info=True)
-            return Response(
-                {"error": f"An unexpected error occurred: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    def perform_create(self, serializer):
+        location = self.request.data.get('location')
+        if not location:
+            return
 
-    def create(self, request, *args, **kwargs):
-        try:
-            location = request.data.get('location')
-            if not location:
-                return Response(
-                    {"error": "Location is required"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            return self.fetch_and_save_weather(location)
-        except Exception as e:
-            logger.error(f"Error in create view: {str(e)}", exc_info=True)
-            return Response(
-                {"error": f"An unexpected error occurred: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # Get weather data from OpenWeatherMap API
+        api_key = os.getenv('OPENWEATHERMAP_API_KEY')
+        if not api_key:
+            raise Exception("OpenWeatherMap API key not found")
 
-    def fetch_and_save_weather(self, location):
-        try:
-            # Get weather data from OpenWeatherMap API
-            api_key = os.getenv('OPENWEATHER_API_KEY')
-            if not api_key:
-                logger.error("OpenWeather API key not found in environment variables")
-                return Response(
-                    {"error": "Weather service configuration error"}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
-            logger.info(f"Fetching weather data for {location}")
-            response = requests.get(url)
-            
-            if response.status_code == 200:
-                data = response.json()
-                logger.info(f"Received weather data: {json.dumps(data)}")
-                
-                weather_data = {
-                    'location': location,
-                    'temperature': data['main']['temp'],
-                    'rain_chance': data.get('rain', {}).get('1h', 0) if 'rain' in data else 0,
-                    'weather_conditions': {
-                        'main': data['weather'][0]['main'],
-                        'description': data['weather'][0]['description'],
-                        'icon': data['weather'][0]['icon']
-                    }
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            data = response.json()
+            weather_data = {
+                'location': location,
+                'temperature': data['main']['temp'],
+                'rain_chance': data.get('rain', {}).get('1h', 0) if 'rain' in data else 0,
+                'weather_conditions': {
+                    'main': data['weather'][0]['main'],
+                    'description': data['weather'][0]['description'],
+                    'icon': data['weather'][0]['icon']
                 }
-                
-                serializer = self.get_serializer(data=weather_data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                else:
-                    logger.error(f"Serializer errors: {serializer.errors}")
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                logger.error(f"OpenWeather API error: {response.status_code} - {response.text}")
-                return Response(
-                    {"error": f"Failed to fetch weather data: {response.text}"}, 
-                    status=status.HTTP_502_BAD_GATEWAY
-                )
-        except Exception as e:
-            logger.error(f"Error fetching weather: {str(e)}", exc_info=True)
-            return Response(
-                {"error": f"Failed to fetch weather data: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+            serializer.save(**weather_data)
+        else:
+            raise Exception(f"Failed to fetch weather data: {response.status_code}")
