@@ -7,6 +7,10 @@ from .models import Note, WeatherData
 import requests
 import os
 from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework import status
 
 # Create your views here.
 class NoteListCreate(generics.ListCreateAPIView):
@@ -74,3 +78,31 @@ class WeatherDataView(generics.ListCreateAPIView):
             serializer.save(**weather_data)
         else:
             raise Exception(f"Failed to fetch weather data: {response.status_code}")
+
+class YelpActivitiesView(APIView):
+    permission_classes = [AllowAny]  # You can switch to IsAuthenticated if needed
+
+    def get(self, request):
+        location = request.query_params.get('location', 'San Diego')
+        term = request.query_params.get('term', 'activities')  # could be "fun", "events", etc.
+        limit = request.query_params.get('limit', 10)
+
+        headers = {
+            "Authorization": f"Bearer {settings.YELP_API_KEY}"
+        }
+
+        url = "https://api.yelp.com/v3/businesses/search"
+        params = {
+            "location": location,
+            "term": term,
+            "limit": limit,
+            "sort_by": "best_match",
+            "categories": "active,arts,nightlife"  # Example: filter to fun stuff
+        }
+
+        try:
+            response = requests.get(url, headers=headers, params=params)
+            data = response.json()
+            return Response(data, status=response.status_code)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
