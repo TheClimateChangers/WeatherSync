@@ -66,3 +66,38 @@ div {
   form input[type="submit"]:hover {
     background-color: #0056b3;
   }
+
+.weather-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.weather-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.weather-form input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.weather-form button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.weather-form button:hover {
+    background-color: #2980b9;
+}

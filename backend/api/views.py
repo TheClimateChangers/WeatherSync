@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics
-from .serializers import UserSerializer, NoteSerializer
+from .serializers import UserSerializer, NoteSerializer, WeatherDataSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Note
+from .models import Note, WeatherData
+import requests
+import os
+from django.conf import settings
 
 # Create your views here.
 class NoteListCreate(generics.ListCreateAPIView):
@@ -32,3 +35,42 @@ class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+class WeatherDataView(generics.ListCreateAPIView):
+    serializer_class = WeatherDataSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        location = self.request.query_params.get('location', None)
+        if location:
+            return WeatherData.objects.filter(location=location).order_by('-timestamp')[:1]
+        return WeatherData.objects.none()
+
+    def perform_create(self, serializer):
+        location = self.request.data.get('location')
+        if not location:
+            return
+
+        # Get weather data from OpenWeatherMap API
+        api_key = os.getenv('OPENWEATHERMAP_API_KEY')
+        if not api_key:
+            raise Exception("OpenWeatherMap API key not found")
+
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            data = response.json()
+            weather_data = {
+                'location': location,
+                'temperature': data['main']['temp'],
+                'rain_chance': data.get('rain', {}).get('1h', 0) if 'rain' in data else 0,
+                'weather_conditions': {
+                    'main': data['weather'][0]['main'],
+                    'description': data['weather'][0]['description'],
+                    'icon': data['weather'][0]['icon']
+                }
+            }
+            serializer.save(**weather_data)
+        else:
+            raise Exception(f"Failed to fetch weather data: {response.status_code}")

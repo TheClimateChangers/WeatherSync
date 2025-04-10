@@ -1,88 +1,61 @@
 import React from 'react'
 import { useState, useEffect } from "react";
 import api from "../api";
-import Note from "../components/Note"
+import Weather from "../components/Weather"
 import "../styles/Home.css"
+import "../styles/Weather.css"
 
 function Home() {
-    const [notes, setNotes] = useState([]);
-    const [content, setContent] = useState("");
-    const [title, setTitle] = useState("");
+    const [weather, setWeather] = useState(null);
+    const [location, setLocation] = useState("");
 
-    useEffect(() => {
-        getNotes();
-    }, []);
-
-    const getNotes = () => {
+    const getWeather = (city) => {
         api
-            .get("/api/notes/")
+            .get(`/api/weather/?location=${city}`)
             .then((res) => res.data)
             .then((data) => {
-                setNotes(data);
-                console.log(data);
+                if (data.length > 0) {
+                    setWeather(data[0]);
+                } else {
+                    // If no cached data, fetch new data
+                    api
+                        .post("/api/weather/", { location: city })
+                        .then((res) => res.data)
+                        .then((newData) => setWeather(newData))
+                        .catch((err) => alert(err));
+                }
             })
             .catch((err) => alert(err));
     };
 
-    const deleteNote = (id) => {
-        api
-            .delete(`/api/notes/delete/${id}/`)
-            .then((res) => {
-                if (res.status === 204) alert("Note deleted!");
-                else alert("Failed to delete note.");
-                getNotes();
-            })
-            .catch((error) => alert(error));
-    };
-
-    const createNote = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        api
-            .post("/api/notes/", { content, title })
-            .then((res) => {
-                if (res.status === 201) alert("Note created!");
-                else alert("Failed to make note.");
-                getNotes();
-            })
-            .catch((err) => alert(err));
+        if (location.trim()) {
+            getWeather(location.trim());
+        }
     };
 
     return (
         <div>
             <div style={{ backgroundColor: '#3498db', color: 'white', padding: '20px', marginBottom: '20px', textAlign: 'center', borderRadius: '5px' }}>
                 <h1>WeatherSync</h1>
-                <p>Version 2 Test</p>
+                <p>Check the weather in your city</p>
             </div>
-            <div>
-                <h2>Notes</h2>
-                {notes.map((note) => (
-                    <Note note={note} onDelete={deleteNote} key={note.id} />
-                ))}
+            
+            <div className="weather-container">
+                <form onSubmit={handleSubmit} className="weather-form">
+                    <input
+                        type="text"
+                        placeholder="Enter city name"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        required
+                    />
+                    <button type="submit">Get Weather</button>
+                </form>
+
+                {weather && <Weather weather={weather} />}
             </div>
-            <h2>Create a Note</h2>
-            <form onSubmit={createNote}>
-                <label htmlFor="title">Title:</label>
-                <br />
-                <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    required
-                    onChange={(e) => setTitle(e.target.value)}
-                    value={title}
-                />
-                <label htmlFor="content">Content:</label>
-                <br />
-                <textarea
-                    id="content"
-                    name="content"
-                    required
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                ></textarea>
-                <br />
-                <input type="submit" value="Submit"></input>
-            </form>
         </div>
     );
 }
