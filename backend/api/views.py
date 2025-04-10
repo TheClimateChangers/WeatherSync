@@ -50,6 +50,23 @@ class WeatherDataView(generics.ListCreateAPIView):
             return WeatherData.objects.filter(location=location).order_by('-timestamp')[:1]
         return WeatherData.objects.none()
 
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            if not queryset.exists():
+                # If no data exists, fetch new data
+                location = request.query_params.get('location')
+                if location:
+                    return self.fetch_and_save_weather(location)
+            serializer = self.get_serializer(queryset.first())
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error in list view: {str(e)}")
+            return Response(
+                {"error": "An unexpected error occurred"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def create(self, request, *args, **kwargs):
         try:
             location = request.data.get('location')
@@ -58,7 +75,16 @@ class WeatherDataView(generics.ListCreateAPIView):
                     {"error": "Location is required"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            return self.fetch_and_save_weather(location)
+        except Exception as e:
+            logger.error(f"Error in create view: {str(e)}")
+            return Response(
+                {"error": "An unexpected error occurred"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
+    def fetch_and_save_weather(self, location):
+        try:
             # Get weather data from OpenWeatherMap API
             api_key = os.getenv('OPENWEATHER_API_KEY')
             if not api_key:
@@ -98,8 +124,8 @@ class WeatherDataView(generics.ListCreateAPIView):
                     status=status.HTTP_502_BAD_GATEWAY
                 )
         except Exception as e:
-            logger.error(f"Unexpected error: {str(e)}")
+            logger.error(f"Error fetching weather: {str(e)}")
             return Response(
-                {"error": "An unexpected error occurred"}, 
+                {"error": "Failed to fetch weather data"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
