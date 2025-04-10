@@ -9,6 +9,7 @@ import requests
 import os
 import logging
 from django.conf import settings
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -52,18 +53,23 @@ class WeatherDataView(generics.ListCreateAPIView):
 
     def list(self, request, *args, **kwargs):
         try:
+            location = request.query_params.get('location')
+            if not location:
+                return Response(
+                    {"error": "Location parameter is required"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             queryset = self.get_queryset()
             if not queryset.exists():
-                # If no data exists, fetch new data
-                location = request.query_params.get('location')
-                if location:
-                    return self.fetch_and_save_weather(location)
+                return self.fetch_and_save_weather(location)
+            
             serializer = self.get_serializer(queryset.first())
             return Response(serializer.data)
         except Exception as e:
-            logger.error(f"Error in list view: {str(e)}")
+            logger.error(f"Error in list view: {str(e)}", exc_info=True)
             return Response(
-                {"error": "An unexpected error occurred"}, 
+                {"error": f"An unexpected error occurred: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -77,9 +83,9 @@ class WeatherDataView(generics.ListCreateAPIView):
                 )
             return self.fetch_and_save_weather(location)
         except Exception as e:
-            logger.error(f"Error in create view: {str(e)}")
+            logger.error(f"Error in create view: {str(e)}", exc_info=True)
             return Response(
-                {"error": "An unexpected error occurred"}, 
+                {"error": f"An unexpected error occurred: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -100,6 +106,8 @@ class WeatherDataView(generics.ListCreateAPIView):
             
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"Received weather data: {json.dumps(data)}")
+                
                 weather_data = {
                     'location': location,
                     'temperature': data['main']['temp'],
@@ -110,6 +118,7 @@ class WeatherDataView(generics.ListCreateAPIView):
                         'icon': data['weather'][0]['icon']
                     }
                 }
+                
                 serializer = self.get_serializer(data=weather_data)
                 if serializer.is_valid():
                     serializer.save()
@@ -120,12 +129,12 @@ class WeatherDataView(generics.ListCreateAPIView):
             else:
                 logger.error(f"OpenWeather API error: {response.status_code} - {response.text}")
                 return Response(
-                    {"error": "Failed to fetch weather data"}, 
+                    {"error": f"Failed to fetch weather data: {response.text}"}, 
                     status=status.HTTP_502_BAD_GATEWAY
                 )
         except Exception as e:
-            logger.error(f"Error fetching weather: {str(e)}")
+            logger.error(f"Error fetching weather: {str(e)}", exc_info=True)
             return Response(
-                {"error": "Failed to fetch weather data"}, 
+                {"error": f"Failed to fetch weather data: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
