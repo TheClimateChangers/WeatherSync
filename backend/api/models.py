@@ -19,3 +19,7 @@ class WeatherData(models.Model):
 
     def __str__(self):
         return f"{self.location} - {self.timestamp}"
+    
+    class Meta:
+        managed = False
+        db_table = 'weather_data'
