@@ -18,9 +18,12 @@ class WeatherService:
         """
         url = "https://api.openweathermap.org/data/2.5/weather"
         
+        api_key = settings.OPENWEATHER_API_KEY
+        print(f"Debug - API Key: {api_key}")  # Debug line to show the actual key
+        
         params = {
             "q": location,
-            "appid": settings.OPENWEATHER_API_KEY,
+            "appid": api_key,
             "units": "metric"  # For Celsius
         }
         
