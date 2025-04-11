@@ -3,21 +3,29 @@ import React from 'react';
 function Weather({ weather }) {
     if (!weather) return null;
 
+    // Format temperature to one decimal place
+    const formattedTemp = weather.temperature ? weather.temperature.toFixed(1) : 'N/A';
+    
+    // Format rain chance to percentage
+    const rainChance = weather.rain_chance ? (weather.rain_chance * 100).toFixed(0) : '0';
+
     return (
         <div className="weather-card">
             <h3>{weather.location}</h3>
             <div className="weather-details">
                 <div className="temperature">
-                    <span className="temp-value">{weather.temperature}°C</span>
+                    <span className="temp-value">{formattedTemp}°C</span>
                 </div>
                 <div className="weather-info">
-                    <p>{weather.weather_conditions.description}</p>
-                    <p>Rain chance: {weather.rain_chance}%</p>
+                    <p>{weather.weather_conditions?.description || 'No description available'}</p>
+                    <p>Rain chance: {rainChance}%</p>
                 </div>
-                <img 
-                    src={`http://openweathermap.org/img/wn/${weather.weather_conditions.icon}@2x.png`} 
-                    alt={weather.weather_conditions.main}
-                />
+                {weather.weather_conditions?.icon && (
+                    <img 
+                        src={`http://openweathermap.org/img/wn/${weather.weather_conditions.icon}@2x.png`} 
+                        alt={weather.weather_conditions.main || 'Weather icon'}
+                    />
+                )}
             </div>
         </div>
     );
