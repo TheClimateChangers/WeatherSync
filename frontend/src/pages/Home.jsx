@@ -8,8 +8,13 @@ import "../styles/Weather.css"
 function Home() {
     const [weather, setWeather] = useState(null);
     const [location, setLocation] = useState("");
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const getWeather = (city) => {
+        setLoading(true);
+        setError(null);
+        
         api
             .get(`/api/weather/?location=${city}`)
             .then((res) => res.data)
@@ -18,14 +23,19 @@ function Home() {
                     setWeather(data[0]);
                 } else {
                     // If no cached data, fetch new data
-                    api
-                        .post("/api/weather/", { location: city })
+                    return api.post("/api/weather/", { location: city })
                         .then((res) => res.data)
-                        .then((newData) => setWeather(newData))
-                        .catch((err) => alert(err));
+                        .then((newData) => setWeather(newData));
                 }
             })
-            .catch((err) => alert(err));
+            .catch((err) => {
+                const errorMessage = err.response?.data?.error || "Failed to fetch weather data";
+                setError(errorMessage);
+                setWeather(null);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
     };
 
     const handleSubmit = (e) => {
@@ -51,8 +61,16 @@ function Home() {
                         onChange={(e) => setLocation(e.target.value)}
                         required
                     />
-                    <button type="submit">Get Weather</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? 'Loading...' : 'Get Weather'}
+                    </button>
                 </form>
+
+                {error && (
+                    <div className="error-message">
+                        {error}
+                    </div>
+                )}
 
                 {weather && <Weather weather={weather} />}
             </div>

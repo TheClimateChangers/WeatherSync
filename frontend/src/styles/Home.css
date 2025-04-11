@@ -101,3 +101,17 @@ div {
 .weather-form button:hover {
     background-color: #2980b9;
 }
+
+.weather-form button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
