@@ -18,26 +18,33 @@ function Home() {
         api
             .get(`/api/weather/?location=${city}`)
             .then((res) => {
-                console.log('API Response:', res.data);  // Debug log
+                console.log('API Response:', res.data);
                 return res.data;
             })
             .then((data) => {
-                console.log('Processed data:', data);  // Debug log
-                if (data.length > 0) {
-                    setWeather(data[0]);
+                console.log('Processed data:', data);
+                // If we have valid data with temperature, use it
+                if (data && data.temperature !== null) {
+                    setWeather(data);
                 } else {
-                    // If no cached data, fetch new data
+                    // Only fetch new data if we don't have valid data
                     return api.post("/api/weather/", { location: city })
                         .then((res) => {
-                            console.log('New weather data:', res.data);  // Debug log
+                            console.log('New weather data:', res.data);
                             return res.data;
                         })
-                        .then((newData) => setWeather(newData));
+                        .then((newData) => {
+                            if (newData && newData.temperature !== null) {
+                                setWeather(newData);
+                            } else {
+                                throw new Error('Failed to get valid weather data');
+                            }
+                        });
                 }
             })
             .catch((err) => {
-                console.error('Error fetching weather:', err);  // Debug log
-                const errorMessage = err.response?.data?.error || "Failed to fetch weather data";
+                console.error('Error fetching weather:', err);
+                const errorMessage = err.response?.data?.error || err.message || "Failed to fetch weather data";
                 setError(errorMessage);
                 setWeather(null);
             })
