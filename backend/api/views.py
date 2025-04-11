@@ -45,7 +45,7 @@ class CreateUserView(generics.CreateAPIView):
 
 class WeatherDataView(generics.ListCreateAPIView):
     serializer_class = WeatherDataSerializer
-    permission_classes = [AllowAny]  # Changed to AllowAny to make it public
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         location = self.request.query_params.get('location', None)
@@ -53,8 +53,8 @@ class WeatherDataView(generics.ListCreateAPIView):
             return WeatherData.objects.filter(location=location).order_by('-timestamp')[:1]
         return WeatherData.objects.none()
 
-    def perform_create(self, serializer):
-        location = self.request.data.get('location')
+    def get(self, request, *args, **kwargs):
+        location = request.query_params.get('location')
         if not location:
             return Response({"error": "Location is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,7 +80,15 @@ class WeatherDataView(generics.ListCreateAPIView):
                         'icon': data['weather'][0]['icon']
                     }
                 }
-                serializer.save(**weather_data)
+                
+                # Save the weather data
+                serializer = self.get_serializer(data=weather_data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    logger.error(f"Serializer errors: {serializer.errors}")
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error_message = f"Failed to fetch weather data: {response.status_code}"
                 logger.error(error_message)
@@ -88,6 +96,10 @@ class WeatherDataView(generics.ListCreateAPIView):
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
             return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def perform_create(self, serializer):
+        # This method is kept for POST requests if needed
+        serializer.save()
 
 class YelpActivitiesView(APIView):
     permission_classes = [AllowAny]  # You can switch to IsAuthenticated if needed
