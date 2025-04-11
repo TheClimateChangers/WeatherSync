@@ -17,18 +17,26 @@ function Home() {
         
         api
             .get(`/api/weather/?location=${city}`)
-            .then((res) => res.data)
+            .then((res) => {
+                console.log('API Response:', res.data);  // Debug log
+                return res.data;
+            })
             .then((data) => {
+                console.log('Processed data:', data);  // Debug log
                 if (data.length > 0) {
                     setWeather(data[0]);
                 } else {
                     // If no cached data, fetch new data
                     return api.post("/api/weather/", { location: city })
-                        .then((res) => res.data)
+                        .then((res) => {
+                            console.log('New weather data:', res.data);  // Debug log
+                            return res.data;
+                        })
                         .then((newData) => setWeather(newData));
                 }
             })
             .catch((err) => {
+                console.error('Error fetching weather:', err);  // Debug log
                 const errorMessage = err.response?.data?.error || "Failed to fetch weather data";
                 setError(errorMessage);
                 setWeather(null);

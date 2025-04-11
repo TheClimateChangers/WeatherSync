@@ -3,6 +3,8 @@ import React from 'react';
 function Weather({ weather }) {
     if (!weather) return null;
 
+    console.log('Full weather data:', JSON.stringify(weather, null, 2));
+
     // Format temperature to one decimal place
     const formattedTemp = weather.temperature ? weather.temperature.toFixed(1) : 'N/A';
     
