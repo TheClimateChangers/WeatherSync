@@ -8,7 +8,7 @@ function Weather({ weather }) {
     // Format temperature to one decimal place
     const formattedTemp = weather.temperature ? weather.temperature.toFixed(1) : 'N/A';
     
-    // Format rain chance to percentage
+    // Format rain chance - multiply by 100 since it's stored as a decimal
     const rainChance = weather.rain_chance ? (weather.rain_chance * 100).toFixed(0) : '0';
 
     return (
@@ -21,6 +21,8 @@ function Weather({ weather }) {
                 <div className="weather-info">
                     <p>{weather.weather_conditions?.description || 'No description available'}</p>
                     <p>Rain chance: {rainChance}%</p>
+                    <p>Humidity: {weather.weather_conditions?.humidity || 'N/A'}%</p>
+                    <p>Wind speed: {weather.weather_conditions?.wind_speed || 'N/A'} m/s</p>
                 </div>
                 {weather.weather_conditions?.icon && (
                     <img 
