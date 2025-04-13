@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Plan from "./pages/Plan"
+import Trips from "./pages/Trips"
+import CustomPlan from "./pages/CustomPlan";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout"; //  fixed casing
@@ -31,6 +33,8 @@ function App() {
           <Route path="register" element={<RegisterAndLogout />} />
           <Route path="logout" element={<Logout />} />
           <Route path="plan" element={<Plan />} />
+          <Route path="trips" element={<Trips />} />
+          <Route path="custom-trip" element={<CustomPlan />} />
           <Route path="" element={<NotFound />} />
         </Route>
       </Routes>

@@ -263,13 +263,121 @@ function Plan() {
   );
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>Plan Your Trip</h2>
-      {!showActivityPrompt && !showUserPrompt && renderCalendarStep()}
-      {showActivityPrompt && !showUserPrompt && renderActivityStep()}
-      {showUserPrompt && renderUserStep()}
+    <div style={{ 
+      maxHeight: "90vh", 
+      overflowY: "auto", 
+      padding: "30px", 
+      margin: "0 auto", 
+      maxWidth: "700px", 
+      textAlign: "center" 
+    }}>
+      <h2 style={{ marginBottom: "30px" }}>Plan Your Trip</h2>
+  
+      {/* Step 1: Dates */}
+      <section>
+        <h3>Pick a date range:</h3>
+        <DatePicker
+          selected={startDate}
+          onChange={onDateChange}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          inline
+        />
+        <p>{dateRange}</p>
+      </section>
+  
+      {/* Step 2: Activities */}
+      <section style={{ opacity: isValidRange ? 1 : 0.5, pointerEvents: isValidRange ? "auto" : "none", marginTop: "40px" }}>
+        <h3>Select your activities:</h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gap: "15px",
+            margin: "30px auto",
+          }}
+        >
+          {activities.map((activity) => (
+            <div
+              key={activity}
+              onClick={() => toggleActivity(activity)}
+              style={activityBoxStyle(selectedActivities.includes(activity))}
+            >
+              {activity}
+            </div>
+          ))}
+        </div>
+        {selectedActivities.length > 0 && (
+          <p>Selected: {selectedActivities.join(", ")}</p>
+        )}
+      </section>
+  
+      {/* Step 3: Users */}
+      <section style={{ opacity: isReadyToProceed ? 1 : 0.5, pointerEvents: isReadyToProceed ? "auto" : "none", marginTop: "40px" }}>
+        <h3>Add users to your trip:</h3>
+        <input
+          type="text"
+          placeholder="Search users you follow..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          style={inputStyle}
+        />
+        {suggestedUsers.length > 0 && (
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {suggestedUsers.map((user) => (
+              <li
+                key={user}
+                onClick={() => addUser(user)}
+                style={{
+                  padding: "8px",
+                  cursor: "pointer",
+                  backgroundColor: "#f0f0f0",
+                  margin: "4px auto",
+                  maxWidth: "300px",
+                  borderRadius: "5px"
+                }}
+              >
+                {user}
+              </li>
+            ))}
+          </ul>
+        )}
+        {addedUsers.length > 0 && (
+          <>
+            <h4>Added users:</h4>
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              {addedUsers.map((user) => (
+                <li key={user} style={userChipStyle}>
+                  {user}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+  
+      {/* Submit */}
+      <div style={{ marginTop: "40px" }}>
+        <ContinueButton
+          onClick={() => {
+            const payload = {
+              start_date: startDate.toISOString().split("T")[0],
+              end_date: endDate.toISOString().split("T")[0],
+              activities: selectedActivities,
+              invited_users: addedUsers,
+            };
+  
+            console.log("📦 Data to send to backend:", payload);
+            alert("Plan data has been logged to the console!");
+          }}
+          label="Finish Planning"
+          disabled={!isValidRange || !isReadyToProceed}
+        />
+      </div>
     </div>
   );
+  
 }
 
 export default Plan;
