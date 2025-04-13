@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PlacesAutocomplete from 'react-places-autocomplete';
 import api from '../api';
 import Weather from '../components/Weather';
+import YelpEvents from '../components/YelpEvents';
 import '../styles/Home.css';
 import '../styles/Weather.css';
 import { LoadScript } from '@react-google-maps/api';
@@ -10,6 +11,7 @@ const GOOGLE_MAP_LIBRARIES = ['places'];
 
 function Home() {
   const [weather, setWeather] = useState(null);
+  const [events, setEvents] = useState(null);
   const [location, setLocation] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -51,9 +53,23 @@ function Home() {
       });
   };
 
+  const getYelpEvents = city => {
+    api
+      .get(`/api/yelp-activities/?location=${city}`)
+      .then(res => res.data)
+      .then(data => {
+        setEvents(data);
+      })
+      .catch(err => {
+        console.error('Failed to fetch Yelp events:', err);
+        setEvents(null);
+      });
+  };
+
   const handleSelect = address => {
     setLocation(address); // Update the location
     getWeather(address); // Fetch weather data based on the selected location
+    getYelpEvents(address); // Fetch Yelp events for the selected location
   };
 
   return (
@@ -69,14 +85,17 @@ function Home() {
         }}
       >
         <h1>WeatherSync</h1>
-        <p>Check the weather in your city</p>
+        <p>Check the weather and local activities in your city</p>
       </div>
 
       <div className="weather-container">
         <form
           onSubmit={e => {
             e.preventDefault();
-            if (location.trim()) getWeather(location.trim());
+            if (location.trim()) {
+              getWeather(location.trim());
+              getYelpEvents(location.trim());
+            }
           }}
           className="weather-form"
         >
@@ -131,12 +150,13 @@ function Home() {
           </LoadScript>
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Loading...' : 'Get Weather'}
+            {loading ? 'Loading...' : 'Get Weather & Activities'}
           </button>
         </form>
 
         {error && <div className="error-message">{error}</div>}
         {weather && <Weather weather={weather} />}
+        {events && <YelpEvents events={events} />}
       </div>
     </div>
   );

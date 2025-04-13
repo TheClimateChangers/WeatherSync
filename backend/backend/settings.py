@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "api",
     "rest_framework",
+    "rest_framework_simplejwt",
     "corsheaders",
 ]
 
@@ -159,10 +160,6 @@ YELP_API_KEY = os.getenv("YELP_API_KEY")
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
-# OpenWeatherMap API Key
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
-
 # Import local settings
 try:
     from .local_settings import *

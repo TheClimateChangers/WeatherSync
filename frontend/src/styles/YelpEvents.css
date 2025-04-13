@@ -1,0 +1,51 @@
+.yelp-events {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.yelp-events h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.events-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.event-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.event-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+}
+
+.event-card .rating {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.event-card .address,
+.event-card .phone {
+    color: #666;
+    margin: 0.25rem 0;
+}
+
+.event-card a {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+.event-card a:hover {
+    text-decoration: underline;
+} 
