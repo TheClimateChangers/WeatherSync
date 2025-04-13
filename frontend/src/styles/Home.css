@@ -1,4 +1,3 @@
-/* Set Arial for everything inside the banner */
 .banner {
   position: relative;
   height: 50vh;
@@ -12,7 +11,7 @@
   justify-content: center;
   text-align: center;
   color: white;
-  font-family: Arial, sans-serif; /* 👈 sets font */
+  font-family: Arial, sans-serif; 
   overflow: hidden;
 }
 
@@ -35,14 +34,12 @@
   font-family: Arial, sans-serif;
 }
 
-/* Make both text elements same size and consistent spacing */
 .banner-overlay h1,
 .banner-overlay p {
   font-size: 1.8rem;
-  margin: 0 0 20px; /* spacing below each */
+  margin: 0 0 20px; 
 }
 
-/* Add more space above the button */
 .plan-trip-button {
   background-color: #ff9933;
   padding: 14px 32px;
@@ -58,4 +55,111 @@
 
 .plan-trip-button:hover {
   background-color: #ff7f00;
+}
+.explore-section {
+  text-align: center;
+  margin: 3rem 0;
+}
+
+.explore-section h2 {
+  font-family: Arial, sans-serif;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.explore-cards {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 2rem 1rem;
+}
+
+.explore-card {
+  width: 220px;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.explore-card:hover {
+  transform: scale(1.03);
+}
+
+.card-image {
+  height: 66%;
+  background-size: cover;
+  background-position: center;
+}
+
+.card-info {
+  padding: 0.8rem;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.card-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card-info p {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+
+.mission-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  flex-wrap: wrap;
+}
+
+.mission-text {
+  flex: 1;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.mission-text h3 {
+  font-family: Arial, sans-serif;
+  font-size: 1.3rem;
+}
+.mission-text p {
+  font-size: 1 rem;
+  line-height: 1.6;
+  font-family: Arial, sans-serif;
+}
+.mission-image {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  height: 200px;
+  background-image: url('../assets/Homepage_Mission.webp');
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+}
+
+.card-paris {
+  background-image: url('../assets/paris.jpg');
+}
+
+.card-tokyo {
+  background-image: url('../assets/tokyo.webp');
+}
+
+.card-rome {
+  background-image: url('../assets/rome.webp');
 }
