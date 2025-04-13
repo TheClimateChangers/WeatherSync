@@ -5,7 +5,7 @@ import "../styles/SideBar.css";
 const navItems = [
   { name: "Home", path: "/home" },
   { name: "My Trips", path: "/trips" },
-  { name: "Search", path: "/search" },
+  // { name: "Search", path: "/search" },
   { name: "Profile", path: "/profile" },
 ];
 
@@ -15,7 +15,6 @@ const SideBar = () => {
   return (
     <div className="sidebar">
       <div>
-        <h2 className="sidebar-title">TripSync</h2>
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <Link
@@ -29,11 +28,12 @@ const SideBar = () => {
             </Link>
           ))}
         </nav>
+        
+      <Link to="/plan" className="create-trip-btn">
+        + Build
+      </Link>
       </div>
 
-      <Link to="/create" className="create-trip-btn">
-        + Create Trip
-      </Link>
     </div>
   );
 };
