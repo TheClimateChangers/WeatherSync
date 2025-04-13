@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@react-google-maps/api": "^2.20.6",
+    "react-places-autocomplete": "^7.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
