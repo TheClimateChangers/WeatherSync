@@ -3,7 +3,8 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import NavBar from "./NavBar";
 import SideBar from "./SideBar";
-import "../styles/Layout.css"; // Make sure this file exists
+import Footer from "./Footer"
+import "../styles/Layout.css";
 
 const Layout = () => {
   return (
@@ -15,6 +16,8 @@ const Layout = () => {
           <Outlet />
         </main>
       </div>
+      <Footer />
+
     </div>
   );
 };
