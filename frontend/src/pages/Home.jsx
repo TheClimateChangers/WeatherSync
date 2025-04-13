@@ -1,96 +1,145 @@
-import React from 'react'
-import { useState, useEffect } from "react";
-import api from "../api";
-import Weather from "../components/Weather"
-import "../styles/Home.css"
-import "../styles/Weather.css"
+import React, { useState } from 'react';
+import PlacesAutocomplete from 'react-places-autocomplete';
+import api from '../api';
+import Weather from '../components/Weather';
+import '../styles/Home.css';
+import '../styles/Weather.css';
+import { LoadScript } from '@react-google-maps/api';
+
+const GOOGLE_MAP_LIBRARIES = ['places'];
 
 function Home() {
-    const [weather, setWeather] = useState(null);
-    const [location, setLocation] = useState("");
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const [weather, setWeather] = useState(null);
+  const [location, setLocation] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    const getWeather = (city) => {
-        setLoading(true);
-        setError(null);
-        
-        api
-            .get(`/api/weather/?location=${city}`)
-            .then((res) => {
-                console.log('API Response:', res.data);
-                return res.data;
-            })
-            .then((data) => {
-                console.log('Processed data:', data);
-                // If we have valid data with temperature, use it
-                if (data && data.temperature !== null) {
-                    setWeather(data);
-                } else {
-                    // Only fetch new data if we don't have valid data
-                    return api.post("/api/weather/", { location: city })
-                        .then((res) => {
-                            console.log('New weather data:', res.data);
-                            return res.data;
-                        })
-                        .then((newData) => {
-                            if (newData && newData.temperature !== null) {
-                                setWeather(newData);
-                            } else {
-                                throw new Error('Failed to get valid weather data');
-                            }
-                        });
-                }
-            })
-            .catch((err) => {
-                console.error('Error fetching weather:', err);
-                const errorMessage = err.response?.data?.error || err.message || "Failed to fetch weather data";
-                setError(errorMessage);
-                setWeather(null);
-            })
-            .finally(() => {
-                setLoading(false);
+  const getWeather = city => {
+    setLoading(true);
+    setError(null);
+
+    // Fetch weather data for the selected city
+    api
+      .get(`/api/weather/?location=${city}`)
+      .then(res => res.data)
+      .then(data => {
+        if (data && data.temperature !== null) {
+          setWeather(data);
+        } else {
+          return api
+            .post('/api/weather/', { location: city })
+            .then(res => res.data)
+            .then(newData => {
+              if (newData && newData.temperature !== null) {
+                setWeather(newData);
+              } else {
+                throw new Error('Failed to get valid weather data');
+              }
             });
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (location.trim()) {
-            getWeather(location.trim());
         }
-    };
+      })
+      .catch(err => {
+        const errorMessage =
+          err.response?.data?.error ||
+          err.message ||
+          'Failed to fetch weather data';
+        setError(errorMessage);
+        setWeather(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
-    return (
-        <div>
-            <div style={{ backgroundColor: '#3498db', color: 'white', padding: '20px', marginBottom: '20px', textAlign: 'center', borderRadius: '5px' }}>
-                <h1>WeatherSync</h1>
-                <p>Check the weather in your city</p>
-            </div>
-            
-            <div className="weather-container">
-                <form onSubmit={handleSubmit} className="weather-form">
-                    <input
-                        type="text"
-                        placeholder="Enter city name"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        required
-                    />
-                    <button type="submit" disabled={loading}>
-                        {loading ? 'Loading...' : 'Get Weather'}
-                    </button>
-                </form>
+  const handleSelect = address => {
+    setLocation(address); // Update the location
+    getWeather(address); // Fetch weather data based on the selected location
+  };
 
-                {error && (
-                    <div className="error-message">
-                        {error}
-                    </div>
-                )}
+  return (
+    <div>
+      <div
+        style={{
+          backgroundColor: '#3498db',
+          color: 'white',
+          padding: '20px',
+          marginBottom: '20px',
+          textAlign: 'center',
+          borderRadius: '5px',
+        }}
+      >
+        <h1>WeatherSync</h1>
+        <p>Check the weather in your city</p>
+      </div>
 
-                {weather && <Weather weather={weather} />}
-            </div>
-        </div>
-    );
+      <div className="weather-container">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            if (location.trim()) getWeather(location.trim());
+          }}
+          className="weather-form"
+        >
+          {/* Load Google Maps API for Places Autocomplete */}
+          <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={GOOGLE_MAP_LIBRARIES}
+          >
+            <PlacesAutocomplete
+              value={location}
+              onChange={setLocation}
+              onSelect={handleSelect}
+              searchOptions={{ types: ['(cities)'] }}
+            >
+              {({
+                getInputProps,
+                suggestions,
+                getSuggestionItemProps,
+                loading,
+              }) => (
+                <div>
+                  <input
+                    {...getInputProps({
+                      placeholder: 'Enter city name',
+                      className: 'location-input',
+                    })}
+                    required
+                  />
+                  <div className="autocomplete-dropdown">
+                    {loading && <div>Loading...</div>}
+                    {suggestions.map(suggestion => {
+                      const className = suggestion.active
+                        ? 'suggestion-item--active'
+                        : 'suggestion-item';
+
+                      // Separate key before spreading
+                      const itemProps = getSuggestionItemProps(suggestion, {
+                        className,
+                      });
+                      const { key: _key, ...rest } = itemProps;
+
+                      return (
+                        <div key={suggestion.placeId} {...rest}>
+                          <span>{suggestion.description}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </PlacesAutocomplete>
+          </LoadScript>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Loading...' : 'Get Weather'}
+          </button>
+        </form>
+
+        {error && <div className="error-message">{error}</div>}
+        {weather && <Weather weather={weather} />}
+      </div>
+    </div>
+  );
 }
 
 export default Home;
