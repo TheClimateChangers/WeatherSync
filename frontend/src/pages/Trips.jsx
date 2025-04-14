@@ -6,25 +6,120 @@ function TripsPage() {
   const navigate = useNavigate();
 
   const dummyTrips = [
-    { id: 1, name: "Trip to Yosemite", date: "2024-07-01", activities: ["Hiking", "Camping"] },
-    { id: 2, name: "Beach Vacation", date: "2024-08-15", activities: ["Swimming", "Sunbathing"] },
-    { id: 3, name: "City Tour", date: "2024-09-10", activities: ["Museum", "Cafe Hopping"] },
-    { id: 4, name: "Mountain Retreat", date: "2024-10-05", activities: ["Meditation", "Nature Walks"] },
-    { id: 5, name: "Desert Safari", date: "2024-11-20", activities: ["Camel Ride", "Stargazing"] },
-    { id: 6, name: "Ski Adventure", date: "2024-12-18", activities: ["Skiing", "Hot Chocolate"] },
-    { id: 7, name: "Road Trip", date: "2025-01-10", activities: ["Driving", "Photo Stops"] },
-    { id: 8, name: "Island Hopping", date: "2025-02-14", activities: ["Boating", "Snorkeling"] },
-    { id: 9, name: "Historical Europe", date: "2025-03-01", activities: ["Castles", "Walking Tours"] },
-    { id: 10, name: "Trip to Yosemite", date: "2024-07-01", activities: ["Hiking", "Camping"] },
-    { id: 11, name: "Beach Vacation", date: "2024-08-15", activities: ["Swimming", "Sunbathing"] },
-    { id: 12, name: "Beach Vacation", date: "2024-08-15", activities: ["Swimming", "Sunbathing"] },
-    { id: 13, name: "City Tour", date: "2024-09-10", activities: ["Museum", "Cafe Hopping"] },
-    { id: 14, name: "Mountain Retreat", date: "2024-10-05", activities: ["Meditation", "Nature Walks"] },
-    { id: 15, name: "Desert Safari", date: "2024-11-20", activities: ["Camel Ride", "Stargazing"] },
-    { id: 16, name: "Ski Adventure", date: "2024-12-18", activities: ["Skiing", "Hot Chocolate"] },
-    { id: 17, name: "Road Trip", date: "2025-01-10", activities: ["Driving", "Photo Stops"] },
-    { id: 18, name: "Island Hopping", date: "2025-02-14", activities: ["Boating", "Snorkeling"] },
-    { id: 19, name: "Historical Europe", date: "2025-03-01", activities: ["Castles", "Walking Tours"] },
+    {
+      id: 1,
+      name: "Trip to Yosemite",
+      date: "2024-07-01",
+      activities: ["Hiking", "Camping"],
+    },
+    {
+      id: 2,
+      name: "Beach Vacation",
+      date: "2024-08-15",
+      activities: ["Swimming", "Sunbathing"],
+    },
+    {
+      id: 3,
+      name: "City Tour",
+      date: "2024-09-10",
+      activities: ["Museum", "Cafe Hopping"],
+    },
+    {
+      id: 4,
+      name: "Mountain Retreat",
+      date: "2024-10-05",
+      activities: ["Meditation", "Nature Walks"],
+    },
+    {
+      id: 5,
+      name: "Desert Safari",
+      date: "2024-11-20",
+      activities: ["Camel Ride", "Stargazing"],
+    },
+    {
+      id: 6,
+      name: "Ski Adventure",
+      date: "2024-12-18",
+      activities: ["Skiing", "Hot Chocolate"],
+    },
+    {
+      id: 7,
+      name: "Road Trip",
+      date: "2025-01-10",
+      activities: ["Driving", "Photo Stops"],
+    },
+    {
+      id: 8,
+      name: "Island Hopping",
+      date: "2025-02-14",
+      activities: ["Boating", "Snorkeling"],
+    },
+    {
+      id: 9,
+      name: "Historical Europe",
+      date: "2025-03-01",
+      activities: ["Castles", "Walking Tours"],
+    },
+    {
+      id: 10,
+      name: "Trip to Yosemite",
+      date: "2024-07-01",
+      activities: ["Hiking", "Camping"],
+    },
+    {
+      id: 11,
+      name: "Beach Vacation",
+      date: "2024-08-15",
+      activities: ["Swimming", "Sunbathing"],
+    },
+    {
+      id: 12,
+      name: "Beach Vacation",
+      date: "2024-08-15",
+      activities: ["Swimming", "Sunbathing"],
+    },
+    {
+      id: 13,
+      name: "City Tour",
+      date: "2024-09-10",
+      activities: ["Museum", "Cafe Hopping"],
+    },
+    {
+      id: 14,
+      name: "Mountain Retreat",
+      date: "2024-10-05",
+      activities: ["Meditation", "Nature Walks"],
+    },
+    {
+      id: 15,
+      name: "Desert Safari",
+      date: "2024-11-20",
+      activities: ["Camel Ride", "Stargazing"],
+    },
+    {
+      id: 16,
+      name: "Ski Adventure",
+      date: "2024-12-18",
+      activities: ["Skiing", "Hot Chocolate"],
+    },
+    {
+      id: 17,
+      name: "Road Trip",
+      date: "2025-01-10",
+      activities: ["Driving", "Photo Stops"],
+    },
+    {
+      id: 18,
+      name: "Island Hopping",
+      date: "2025-02-14",
+      activities: ["Boating", "Snorkeling"],
+    },
+    {
+      id: 19,
+      name: "Historical Europe",
+      date: "2025-03-01",
+      activities: ["Castles", "Walking Tours"],
+    },
   ];
 
   return (
@@ -34,13 +129,21 @@ function TripsPage() {
         <div>
           <button
             onClick={() => setView("full")}
-            className={`px-4 py-2 rounded-l ${view === "full" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`px-4 py-2 rounded-l ${
+              view === "full"
+                ? "bg-orange-400 rounded-l-lg text-white"
+                : "bg-gray-200 hover:bg-orange-300"
+            }`}
           >
             Full View
           </button>
           <button
             onClick={() => setView("grid")}
-            className={`px-4 py-2 rounded-r ${view === "grid" ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+            className={`px-4 py-2 rounded-r ${
+              view === "grid"
+                ? "bg-orange-400 rounded-r-lg text-white"
+                : "bg-gray-200 hover:bg-orange-300"
+            }`}
           >
             Grid View
           </button>
