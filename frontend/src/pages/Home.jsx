@@ -6,91 +6,158 @@ import YelpEvents from '../components/YelpEvents';
 import '../styles/Home.css';
 import '../styles/Weather.css';
 import { LoadScript } from '@react-google-maps/api';
-import { getWeather, getForecast } from '../api';
 
 const GOOGLE_MAP_LIBRARIES = ['places'];
 
 function Home() {
   const [weather, setWeather] = useState(null);
-  const [forecast, setForecast] = useState(null);
+  const [events, setEvents] = useState(null);
   const [location, setLocation] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const getWeather = city => {
     setLoading(true);
-    setError('');
-    
-    try {
-      const [weatherData, forecastData] = await Promise.all([
-        getWeather(location),
-        getForecast(location)
-      ]);
-      setWeather(weatherData);
-      setForecast(forecastData);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch weather data');
-    } finally {
-      setLoading(false);
-    }
+    setError(null);
+
+    // Fetch weather data for the selected city
+    api
+      .get(`/api/weather/?location=${city}`)
+      .then(res => res.data)
+      .then(data => {
+        if (data && data.temperature !== null) {
+          setWeather(data);
+        } else {
+          return api
+            .post('/api/weather/', { location: city })
+            .then(res => res.data)
+            .then(newData => {
+              if (newData && newData.temperature !== null) {
+                setWeather(newData);
+              } else {
+                throw new Error('Failed to get valid weather data');
+              }
+            });
+        }
+      })
+      .catch(err => {
+        const errorMessage =
+          err.response?.data?.error ||
+          err.message ||
+          'Failed to fetch weather data';
+        setError(errorMessage);
+        setWeather(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const getYelpEvents = city => {
+    api
+      .get(`/api/yelp-activities/?location=${city}`)
+      .then(res => res.data)
+      .then(data => {
+        setEvents(data);
+      })
+      .catch(err => {
+        console.error('Failed to fetch Yelp events:', err);
+        setEvents(null);
+      });
+  };
+
+  const handleSelect = address => {
+    setLocation(address); // Update the location
+    getWeather(address); // Fetch weather data based on the selected location
+    getYelpEvents(address); // Fetch Yelp events for the selected location
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Weather Forecast</h1>
-      
-      <form onSubmit={handleSubmit} className="mb-8">
-        <div className="flex gap-4">
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Enter city name"
-            className="flex-1 p-2 border rounded"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+    <div>
+      <div
+        style={{
+          backgroundColor: '#3498db',
+          color: 'white',
+          padding: '20px',
+          marginBottom: '20px',
+          textAlign: 'center',
+          borderRadius: '5px',
+        }}
+      >
+        <h1>WeatherSync</h1>
+        <p>Check the weather and local activities in your city</p>
+      </div>
+
+      <div className="weather-container">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            if (location.trim()) {
+              getWeather(location.trim());
+              getYelpEvents(location.trim());
+            }
+          }}
+          className="weather-form"
+        >
+          {/* Load Google Maps API for Places Autocomplete */}
+          <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={GOOGLE_MAP_LIBRARIES}
           >
-            {loading ? 'Loading...' : 'Get Weather'}
+            <PlacesAutocomplete
+              value={location}
+              onChange={setLocation}
+              onSelect={handleSelect}
+              searchOptions={{ types: ['(cities)'] }}
+            >
+              {({
+                getInputProps,
+                suggestions,
+                getSuggestionItemProps,
+                loading,
+              }) => (
+                <div>
+                  <input
+                    {...getInputProps({
+                      placeholder: 'Enter city name',
+                      className: 'location-input',
+                    })}
+                    required
+                  />
+                  <div className="autocomplete-dropdown">
+                    {loading && <div>Loading...</div>}
+                    {suggestions.map(suggestion => {
+                      const className = suggestion.active
+                        ? 'suggestion-item--active'
+                        : 'suggestion-item';
+
+                      // Separate key before spreading
+                      const itemProps = getSuggestionItemProps(suggestion, {
+                        className,
+                      });
+                      const { key: _key, ...rest } = itemProps;
+
+                      return (
+                        <div key={suggestion.placeId} {...rest}>
+                          <span>{suggestion.description}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </PlacesAutocomplete>
+          </LoadScript>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Loading...' : 'Get Weather & Activities'}
           </button>
-        </div>
-      </form>
+        </form>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      {weather && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Current Weather</h2>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-xl">Temperature: {weather.temperature}°C</p>
-            <p className="text-xl">Conditions: {weather.conditions}</p>
-          </div>
-        </div>
-      )}
-
-      {forecast && (
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">5-Day Forecast</h2>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {forecast.map((day, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg shadow">
-                <p className="font-semibold">Day {index + 1}</p>
-                <p>High: {day.max_temp}°C</p>
-                <p>Low: {day.min_temp}°C</p>
-                <p>Conditions: {day.conditions}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        {error && <div className="error-message">{error}</div>}
+        {weather && <Weather weather={weather} />}
+        {events && <YelpEvents events={events} />}
+      </div>
     </div>
   );
 }

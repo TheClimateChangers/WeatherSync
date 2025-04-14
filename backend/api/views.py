@@ -43,77 +43,43 @@ class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-class WeatherDataView(APIView):
+class WeatherDataView(generics.ListCreateAPIView):
+    serializer_class = WeatherDataSerializer
     permission_classes = [AllowAny]
-    
-    def get(self, request):
+
+    def get_queryset(self):
+        location = self.request.query_params.get('location', None)
+        if location:
+            return WeatherData.objects.filter(location=location).order_by('-timestamp')[:1]
+        return WeatherData.objects.none()
+
+    def get(self, request, *args, **kwargs):
         location = request.query_params.get('location')
         if not location:
-            return Response(
-                {"error": "Location parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
+            return Response({"error": "Location is required"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            # Try to get cached data first
-            cached_data = WeatherData.objects.filter(location=location).first()
-            if cached_data:
-                return Response({
-                    "location": cached_data.location,
-                    "temperature": cached_data.temperature,
-                    "rain_chance": cached_data.rain_chance,
-                    "weather_conditions": cached_data.weather_conditions
-                })
-            
-            # If no cached data, fetch new data
+            # Use WeatherService to fetch and save weather data
             weather_data = WeatherService.fetch_weather(location)
             if not weather_data:
-                return Response(
-                    {"error": "Failed to fetch weather data"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            
-            # Save the new data
-            WeatherService.save_weather_data(weather_data)
-            
-            return Response(weather_data)
-            
-        except Exception as e:
-            logger.error(f"Error in WeatherDataView: {str(e)}")
-            return Response(
-                {"error": "An error occurred while processing your request"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class WeatherForecastView(APIView):
-    permission_classes = [AllowAny]
-    
-    def get(self, request):
-        location = request.query_params.get('location')
-        days = int(request.query_params.get('days', 5))  # Default to 5 days
-        
-        if not location:
-            return Response(
-                {"error": "Location parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        try:
-            forecast_data = WeatherService.fetch_forecast(location, days)
-            if not forecast_data:
-                return Response(
-                    {"error": "Failed to fetch forecast data"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            
-            return Response(forecast_data)
-            
+            # Save the weather data
+            weather_instance = WeatherService.save_weather_data(weather_data)
+            if not weather_instance:
+                return Response({"error": "Failed to save weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            # Serialize and return the data
+            serializer = self.get_serializer(weather_instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         except Exception as e:
-            logger.error(f"Error in WeatherForecastView: {str(e)}")
-            return Response(
-                {"error": "An error occurred while processing your request"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error(f"Error in weather view: {str(e)}")
+            return Response({"error": "Failed to process weather request"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def perform_create(self, serializer):
+        # This method is kept for POST requests if needed
+        serializer.save()
 
 class YelpActivitiesView(APIView):
     permission_classes = [AllowAny]  # You can switch to IsAuthenticated if needed

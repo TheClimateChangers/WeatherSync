@@ -1,7 +1,6 @@
 import requests
 from django.conf import settings
 from .models import WeatherData
-from datetime import datetime
 
 class WeatherService:
     """Service for interacting with the OpenWeatherMap API"""
@@ -50,63 +49,6 @@ class WeatherService:
             return weather_info
         except requests.exceptions.RequestException as e:
             print(f"Error fetching weather data: {e}")
-            return None
-
-    @staticmethod
-    def fetch_forecast(location, days=5):
-        """
-        Fetch weather forecast data from OpenWeatherMap API
-        
-        Args:
-            location (str): City name
-            days (int): Number of days to forecast (max 16)
-            
-        Returns:
-            list: List of forecast data dictionaries
-        """
-        url = "https://api.openweathermap.org/data/2.5/forecast/daily"
-        
-        params = {
-            "q": location,
-            "appid": settings.OPENWEATHER_API_KEY,
-            "units": "metric",  # For Celsius
-            "cnt": min(days, 16)  # Maximum 16 days
-        }
-        
-        try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-            
-            forecasts = []
-            for day in data.get("list", []):
-                forecast = {
-                    "date": datetime.fromtimestamp(day["dt"]).strftime("%Y-%m-%d"),
-                    "temperature": {
-                        "day": day["temp"]["day"],
-                        "min": day["temp"]["min"],
-                        "max": day["temp"]["max"],
-                        "night": day["temp"]["night"],
-                        "eve": day["temp"]["eve"],
-                        "morn": day["temp"]["morn"]
-                    },
-                    "rain_chance": day.get("pop", 0),  # Probability of precipitation
-                    "weather_conditions": {
-                        "main": day["weather"][0]["main"],
-                        "description": day["weather"][0]["description"],
-                        "humidity": day["humidity"],
-                        "wind_speed": day["speed"],
-                        "clouds": day["clouds"]
-                    }
-                }
-                forecasts.append(forecast)
-            
-            return {
-                "location": location,
-                "forecasts": forecasts
-            }
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching forecast data: {e}")
             return None
 
     @staticmethod

@@ -18,25 +18,4 @@ api.interceptors.request.use(
     }
 )
 
-export const getWeather = async (location) => {
-    const response = await axios.get(`${import.meta.env.VITE_URL_API}/api/weather/`, {
-        params: { location }
-    });
-    return response.data;
-};
-
-export const getForecast = async (location, days = 5) => {
-    const response = await axios.get(`${import.meta.env.VITE_URL_API}/api/weather/forecast/`, {
-        params: { location, days }
-    });
-    return response.data;
-};
-
-export const getActivities = async (location) => {
-    const response = await axios.get(`${import.meta.env.VITE_URL_API}/api/activities/`, {
-        params: { location }
-    });
-    return response.data;
-};
-
 export default api
