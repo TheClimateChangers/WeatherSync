@@ -6,6 +6,7 @@ class WeatherData(models.Model):
     temperature = models.FloatField(default=0.0)
     rain_chance = models.FloatField(default=0)
     weather_conditions = models.JSONField(default=dict)
+    forecast = models.JSONField(default=list)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
