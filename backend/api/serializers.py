@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 class WeatherDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeatherData
-        fields = ['id', 'location', 'temperature', 'rain_chance', 'weather_conditions', 'forecast', 'timestamp']
+        fields = ['id', 'location', 'temperature', 'rain_chance', 'weather_conditions', 'timestamp']
         read_only_fields = ['timestamp']
 
 class YelpEventSerializer(serializers.ModelSerializer):
