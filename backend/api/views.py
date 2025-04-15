@@ -44,7 +44,9 @@ class WeatherDataView(viewsets.ViewSet):
                     "weather_conditions": {
                         "main": data["weather"][0]["main"],
                         "description": data["weather"][0]["description"],
-                        "icon": data["weather"][0]["icon"]
+                        "icon": data["weather"][0]["icon"],
+                        "humidity": data["main"]["humidity"],
+                        "wind_speed": data["wind"]["speed"]
                     }
                 }
                 serializer = WeatherDataSerializer(data=weather_data)

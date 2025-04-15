@@ -85,58 +85,58 @@ function LocationSearch() {
             }
           }}
           className="weather-form"
-        > */}
-        <PlacesAutocomplete
-          value={location}
-          onChange={setLocation}
-          onSelect={handleSelect}
-          searchOptions={{ types: ['(cities)'] }}
         >
-          {({
-            getInputProps,
-            suggestions,
-            getSuggestionItemProps,
-            loading: placesLoading,
-          }) => (
-            <div>
-              <input
-                {...getInputProps({
-                  placeholder: 'Enter Travel Destination',
-                  className:
-                    'w-md px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400',
-                })}
-              />
-              <div>
-                {placesLoading && (
-                  <div className="px-4 py-2 text-gray-500"> Loading...</div>
-                )}
-                {suggestions.map((suggestion, index) => {
-                  const isActive = suggestion.active;
-                  const className = isActive
-                    ? 'bg-orange-100 text-white rounded-lg'
-                    : 'hover:bg-orange-500 rounded-lg';
-                  const { key, ...itemProps } = getSuggestionItemProps(
-                    suggestion,
-                    {
-                      className: `px-4 py-2 cursor-pointer ${className}`,
-                    }
-                  );
-                  return (
-                    <div key={key || index} {...itemProps}>
-                      <span className="text-gray-700">
-                        {suggestion.description}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </PlacesAutocomplete>
-        {/* </form> */}
-        {/* {error && <div className="error-message">{error}</div>}
+          {/* Load Google Maps API for Places Autocomplete */}
+          <LoadScript
+            googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            libraries={GOOGLE_MAP_LIBRARIES}
+          >
+            <PlacesAutocomplete
+              value={location}
+              onChange={setLocation}
+              onSelect={handleSelect}
+              searchOptions={{ types: ['(cities)'] }}
+            >
+              {({
+                getInputProps,
+                suggestions,
+                getSuggestionItemProps,
+                loading: placesLoading
+              }) => (
+                <div>
+                  <input
+                    {...getInputProps({
+                      placeholder: 'Search for a city...',
+                      className: 'location-search-input'
+                    })}
+                  />
+                  <div className="autocomplete-dropdown-container">
+                    {placesLoading && <div>Loading...</div>}
+                    {suggestions.map((suggestion, index) => {
+                      const className = suggestion.active
+                        ? 'suggestion-item--active'
+                        : 'suggestion-item';
+                      const { key, ...itemProps } = getSuggestionItemProps(suggestion, {
+                        className
+                      });
+                      return (
+                        <div key={key || index} {...itemProps}>
+                          <span>{suggestion.description}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </PlacesAutocomplete>
+            <button type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Search'}
+            </button>
+          </LoadScript>
+        </form>
+        {error && <div className="error-message">{error}</div>}
         {weather && <Weather data={weather} />}
-        {events && <YelpEvents events={events} />} */}
+        {events && <YelpEvents events={events} />}
       </div>
     </div>
   );
