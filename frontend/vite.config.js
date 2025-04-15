@@ -9,4 +9,7 @@ export default defineConfig({
     port: 5173,
     allowedHosts: ['traveltripsync.com'],
   },
+  resolve: {
+    extensions: ['.js', '.jsx'],
+  },
 });
