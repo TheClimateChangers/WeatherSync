@@ -1,10 +1,12 @@
-from django.urls import path
-from . import views
-from .views import YelpActivitiesView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import NoteViewSet, WeatherDataView, YelpEventView
+
+router = DefaultRouter()
+router.register(r'notes', NoteViewSet)
+router.register(r'weather', WeatherDataView, basename='weather')
+router.register(r'yelp-events', YelpEventView, basename='yelp-events')
 
 urlpatterns = [
-    path("notes/", views.NoteListCreate.as_view(), name="note-list"),
-    path("notes/delete/<int:pk>/", views.NoteDelete.as_view(), name="delete-note"),
-    path("weather/", views.WeatherDataView.as_view(), name="weather-data"),
-    path("yelp-activities/", YelpActivitiesView.as_view(), name="yelp-activities"),
+    path('', include(router.urls)),
 ]
