@@ -101,16 +101,28 @@ class WeatherDataView(viewsets.ViewSet):
                         "wind_speed": sum(data["wind_speed"]) / len(data["wind_speed"])
                     })
 
-                weather_data = {
+                # Create response data
+                response_data = {
                     "current": current_weather,
                     "forecast": forecast_list
                 }
 
-                serializer = WeatherDataSerializer(data=weather_data)
+                # Create and save current weather data
+                current_weather_data = {
+                    "location": location,
+                    "temperature": current_data["main"]["temp"],
+                    "rain_chance": current_data.get("rain", {}).get("1h", 0),
+                    "weather_conditions": current_weather["weather_conditions"],
+                    "forecast": forecast_list
+                }
+
+                serializer = WeatherDataSerializer(data=current_weather_data)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(serializer.data)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(response_data)
+                else:
+                    logger.error(f"Serializer errors: {serializer.errors}")
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 logger.error(f"OpenWeather API error: {current_response.status_code} - {current_response.text}")
                 return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
