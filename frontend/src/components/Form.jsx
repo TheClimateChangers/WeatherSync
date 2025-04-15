@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
 import LoadingIndicator from "./LoadingIndicator";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../firebase";
 
 function Form({ route, method }) {
     const [username, setUsername] = useState("");
@@ -34,6 +36,23 @@ function Form({ route, method }) {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' })
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            // Handle the authenticated user data
+            console.log(user);
+            // Optionally send user data to your server
+            localStorage.setItem(ACCESS_TOKEN, user.accessToken);
+            navigate("/");
+        } catch (error) {
+            console.error(error);
+            alert("Google login failed");
+        }
+    };
+
     return (
         <form onSubmit={handleSubmit} className="form-container">
             <h1>{name}</h1>
@@ -54,6 +73,9 @@ function Form({ route, method }) {
             {loading && <LoadingIndicator />}
             <button className="form-button" type="submit">
                 {name}
+            </button>
+            <button className="form-button" type="button" onClick={handleGoogleLogin}>
+                {name} with Google
             </button>
         </form>
     );
