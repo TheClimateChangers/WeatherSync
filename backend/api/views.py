@@ -1,30 +1,18 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
-from .serializers import UserSerializer, NoteSerializer, WeatherDataSerializer, YelpEventSerializer
+from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Note, WeatherData, YelpEvent
-from .services import WeatherService
+from .models import WeatherData, YelpEvent
 import requests
-import os
+import logging
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-import logging
 
 logger = logging.getLogger(__name__)
 
 # Create your views here.
-class NoteViewSet(viewsets.ModelViewSet):
-    serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Note.objects.filter(author=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -70,34 +58,6 @@ class WeatherDataView(viewsets.ViewSet):
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
             return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class YelpActivitiesView(APIView):
-    permission_classes = [AllowAny]  # You can switch to IsAuthenticated if needed
-
-    def get(self, request):
-        location = request.query_params.get('location', 'San Diego')
-        term = request.query_params.get('term', 'activities')  # could be "fun", "events", etc.
-        limit = request.query_params.get('limit', 10)
-
-        headers = {
-            "Authorization": f"Bearer {settings.YELP_API_KEY}"
-        }
-
-        url = "https://api.yelp.com/v3/businesses/search"
-        params = {
-            "location": location,
-            "term": term,
-            "limit": limit,
-            "sort_by": "best_match",
-            "categories": "active,arts,nightlife"  # Example: filter to fun stuff
-        }
-
-        try:
-            response = requests.get(url, headers=headers, params=params)
-            data = response.json()
-            return Response(data, status=response.status_code)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class YelpEventView(viewsets.ViewSet):
     permission_classes = [AllowAny]
