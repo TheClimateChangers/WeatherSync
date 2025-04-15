@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 class WeatherData(models.Model):
     location = models.CharField(max_length=100)
-    temperature = models.FloatField()
+    temperature = models.FloatField(default=0.0)
     rain_chance = models.FloatField(default=0)
     weather_conditions = models.JSONField(default=dict)
     timestamp = models.DateTimeField(auto_now_add=True)
