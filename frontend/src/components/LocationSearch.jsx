@@ -135,7 +135,7 @@ function LocationSearch() {
           </LoadScript>
         </form>
         {error && <div className="error-message">{error}</div>}
-        {weather && <Weather data={weather} />}
+        {weather && <Weather weather={weather} />}
         {events && <YelpEvents events={events} />}
       </div>
     </div>
