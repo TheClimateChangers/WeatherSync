@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
@@ -7,12 +7,14 @@ import "../styles/Form.css"
 import LoadingIndicator from "./LoadingIndicator";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
+import { AuthContext } from './AuthContext';
 
 function Form({ route, method }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { login } = useContext(AuthContext);
 
     const name = method === "login" ? "Login" : "Register";
 
@@ -23,8 +25,12 @@ function Form({ route, method }) {
         try {
             const res = await api.post(route, { username, password });
             if (method === "login") {
+                const accessToken = res.data.access;
+                
                 localStorage.setItem(ACCESS_TOKEN, res.data.access);
                 localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
+                console.log('Token stored', res.data.access); //HERE
+                login(accessToken);
                 navigate("/");
             } else {
                 navigate("/login");
@@ -42,10 +48,12 @@ function Form({ route, method }) {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
+            const accessToken = await user.getIdToken();
             // Handle the authenticated user data
             console.log(user);
             // Optionally send user data to your server
             localStorage.setItem(ACCESS_TOKEN, user.accessToken);
+            login(accessToken);
             navigate("/");
         } catch (error) {
             console.error(error);
