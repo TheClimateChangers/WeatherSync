@@ -15,27 +15,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Create your views here.
-class NoteListCreate(generics.ListCreateAPIView):
+class NoteViewSet(viewsets.ModelViewSet):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        return Note.objects.filter(author=user)
-    
+        return Note.objects.filter(author=self.request.user)
+
     def perform_create(self, serializer):
-        if serializer.is_valid():
-            serializer.save(author=self.request.user)
-        else:
-            print(serializer.errors)
-
-class NoteDelete(generics.DestroyAPIView):
-    serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        return Note.objects.filter(author=user)
+        serializer.save(author=self.request.user)
 
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
