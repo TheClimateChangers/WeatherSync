@@ -1,0 +1,42 @@
+/* Plan.css */
+
+.search-input {
+  padding: 10px;
+  width: 300px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.user-chip {
+  display: inline-block;
+  background-color: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 20px;
+  padding: 5px 10px;
+  margin: 5px;
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+  justify-items: center;
+}
+
+.activity-box {
+  padding: 15px;
+  border: 2px solid #ccc;
+  border-radius: 30px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: 0.2s ease;
+  font-size: 16px;
+  user-select: none;
+}
+
+.activity-box.selected {
+  border-color: #ff9933;
+  background-color: #ffddbb;
+}
