@@ -32,30 +32,87 @@ class WeatherDataView(viewsets.ViewSet):
             return Response({"error": "Weather service configuration error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         try:
-            response = requests.get(
+            # First get current weather
+            current_response = requests.get(
                 f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
             )
-            if response.status_code == 200:
-                data = response.json()
-                weather_data = {
+            
+            # Then get 5-day forecast (3-hour intervals)
+            forecast_response = requests.get(
+                f"https://api.openweathermap.org/data/2.5/forecast?q={location}&appid={api_key}&units=metric"
+            )
+
+            if current_response.status_code == 200 and forecast_response.status_code == 200:
+                current_data = current_response.json()
+                forecast_data = forecast_response.json()
+                
+                # Process current weather
+                current_weather = {
                     "location": location,
-                    "temperature": data["main"]["temp"],
-                    "rain_chance": data.get("rain", {}).get("1h", 0),
+                    "temperature": current_data["main"]["temp"],
+                    "rain_chance": current_data.get("rain", {}).get("1h", 0),
                     "weather_conditions": {
-                        "main": data["weather"][0]["main"],
-                        "description": data["weather"][0]["description"],
-                        "icon": data["weather"][0]["icon"],
-                        "humidity": data["main"]["humidity"],
-                        "wind_speed": data["wind"]["speed"]
+                        "main": current_data["weather"][0]["main"],
+                        "description": current_data["weather"][0]["description"],
+                        "icon": current_data["weather"][0]["icon"],
+                        "humidity": current_data["main"]["humidity"],
+                        "wind_speed": current_data["wind"]["speed"]
                     }
                 }
+
+                # Process forecast data
+                forecast_list = []
+                # Group by day
+                daily_forecasts = {}
+                for item in forecast_data["list"]:
+                    date = item["dt_txt"].split()[0]  # Get just the date part
+                    if date not in daily_forecasts:
+                        daily_forecasts[date] = {
+                            "date": date,
+                            "temperatures": [],
+                            "conditions": [],
+                            "rain_chances": [],
+                            "humidity": [],
+                            "wind_speed": []
+                        }
+                    
+                    daily_forecasts[date]["temperatures"].append(item["main"]["temp"])
+                    daily_forecasts[date]["conditions"].append({
+                        "main": item["weather"][0]["main"],
+                        "description": item["weather"][0]["description"],
+                        "icon": item["weather"][0]["icon"]
+                    })
+                    daily_forecasts[date]["rain_chances"].append(item.get("rain", {}).get("3h", 0))
+                    daily_forecasts[date]["humidity"].append(item["main"]["humidity"])
+                    daily_forecasts[date]["wind_speed"].append(item["wind"]["speed"])
+
+                # Calculate daily averages and most common conditions
+                for date, data in daily_forecasts.items():
+                    forecast_list.append({
+                        "date": date,
+                        "temperature": {
+                            "min": min(data["temperatures"]),
+                            "max": max(data["temperatures"]),
+                            "avg": sum(data["temperatures"]) / len(data["temperatures"])
+                        },
+                        "weather_conditions": max(data["conditions"], key=lambda x: data["conditions"].count(x)),
+                        "rain_chance": sum(data["rain_chances"]) / len(data["rain_chances"]),
+                        "humidity": sum(data["humidity"]) / len(data["humidity"]),
+                        "wind_speed": sum(data["wind_speed"]) / len(data["wind_speed"])
+                    })
+
+                weather_data = {
+                    "current": current_weather,
+                    "forecast": forecast_list
+                }
+
                 serializer = WeatherDataSerializer(data=weather_data)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
-                logger.error(f"OpenWeather API error: {response.status_code} - {response.text}")
+                logger.error(f"OpenWeather API error: {current_response.status_code} - {current_response.text}")
                 return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
