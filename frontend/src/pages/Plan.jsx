@@ -105,7 +105,7 @@ function Plan() {
   };
 
   return (
-    <div
+    <div className="scroll-container"
       style={{
         maxHeight: '90vh',
         overflowY: 'auto',

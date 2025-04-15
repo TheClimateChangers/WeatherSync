@@ -3,7 +3,7 @@ import '../styles/Plan.css'; // Make sure styles are available
 
 const Activities = ({ activities, selectedActivities, toggleActivity }) => {
   return (
-    <section
+    <div
       style={{
         marginTop: '40px',
       }}
@@ -23,7 +23,7 @@ const Activities = ({ activities, selectedActivities, toggleActivity }) => {
       {selectedActivities.length > 0 && (
         <p>Selected: {selectedActivities.join(', ')}</p>
       )}
-    </section>
+    </div>
   );
 };
 

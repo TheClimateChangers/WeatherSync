@@ -2,7 +2,7 @@ import React from 'react';
 import DatePicker from 'react-datepicker';
 
 const DateCalendar = ({ startDate, endDate, onDateChange, dateRange }) => (
-  <section>
+  <div className="p-6">
     <h3>Pick a date range:</h3>
     <DatePicker
       selected={startDate}
@@ -13,7 +13,7 @@ const DateCalendar = ({ startDate, endDate, onDateChange, dateRange }) => (
       inline
     />
     <p>{dateRange}</p>
-  </section>
+  </div>
 );
 
 export default DateCalendar;

@@ -8,14 +8,14 @@ const AddUsers = ({
   addedUsers,
   isReadyToProceed,
 }) => (
-  <section className={`fade-in ${!isReadyToProceed && 'disabled'}`}>
+  <div className={`fade-in ${!isReadyToProceed && 'disabled'}`}>
     <h3>Add users to your trip:</h3>
     <input
       type="text"
       placeholder="Search users you follow..."
       value={searchInput}
       onChange={e => setSearchInput(e.target.value)}
-      className="search-input"
+      className="search-input bg-white border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 transition ease-in-out duration-100"
     />
     {suggestedUsers.length > 0 && (
       <ul className="suggestion-list">
@@ -38,7 +38,7 @@ const AddUsers = ({
         </ul>
       </>
     )}
-  </section>
+  </div>
 );
 
 export default AddUsers;
