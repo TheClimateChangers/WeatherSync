@@ -26,9 +26,9 @@ class WeatherDataView(viewsets.ViewSet):
         if not location:
             return Response({"error": "Location parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        api_key = settings.OPENWEATHERMAP_API_KEY
+        api_key = settings.OPENWEATHER_API_KEY
         if not api_key:
-            logger.error("OpenWeatherMap API key not found in settings")
+            logger.error("OpenWeather API key not found in settings")
             return Response({"error": "Weather service configuration error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         try:
@@ -53,7 +53,7 @@ class WeatherDataView(viewsets.ViewSet):
                     return Response(serializer.data)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
-                logger.error(f"OpenWeatherMap API error: {response.status_code} - {response.text}")
+                logger.error(f"OpenWeather API error: {response.status_code} - {response.text}")
                 return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")

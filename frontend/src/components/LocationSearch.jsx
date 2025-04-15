@@ -112,16 +112,15 @@ function LocationSearch() {
                   />
                   <div className="autocomplete-dropdown-container">
                     {placesLoading && <div>Loading...</div>}
-                    {suggestions.map(suggestion => {
+                    {suggestions.map((suggestion, index) => {
                       const className = suggestion.active
                         ? 'suggestion-item--active'
                         : 'suggestion-item';
+                      const itemProps = getSuggestionItemProps(suggestion, {
+                        className
+                      });
                       return (
-                        <div
-                          {...getSuggestionItemProps(suggestion, {
-                            className
-                          })}
-                        >
+                        <div key={suggestion.placeId || index} {...itemProps}>
                           <span>{suggestion.description}</span>
                         </div>
                       );
