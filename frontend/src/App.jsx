@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Plan from "./pages/Plan"
 import Trips from "./pages/Trips"
+import Profile from "./pages/Profile"
 import CustomPlan from "./pages/CustomPlan";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,6 +34,7 @@ function App() {
           <Route path="register" element={<RegisterAndLogout />} />
           <Route path="logout" element={<Logout />} />
           <Route path="plan" element={<Plan />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="trips" element={<Trips />} />
           <Route path="custom-trip" element={<CustomPlan />} />
           <Route path="" element={<NotFound />} />
