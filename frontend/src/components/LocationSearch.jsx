@@ -116,11 +116,11 @@ function LocationSearch() {
                       const className = suggestion.active
                         ? 'suggestion-item--active'
                         : 'suggestion-item';
-                      const itemProps = getSuggestionItemProps(suggestion, {
+                      const { key, ...itemProps } = getSuggestionItemProps(suggestion, {
                         className
                       });
                       return (
-                        <div key={suggestion.placeId || index} {...itemProps}>
+                        <div key={key || index} {...itemProps}>
                           <span>{suggestion.description}</span>
                         </div>
                       );
