@@ -73,16 +73,13 @@ class YelpEventView(viewsets.ModelViewSet):
 class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        user = self.request.user
-        return Trip.objects.filter(
-            models.Q(creator=user) | models.Q(invited_users=user)
-        ).distinct()
+        return Trip.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        serializer.save()
 
     @action(detail=True, methods=['post'])
     def add_activity(self, request, pk=None):
