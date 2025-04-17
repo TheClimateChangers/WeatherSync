@@ -1,25 +1,57 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import WeatherData, YelpEvent
+from .models import WeatherData, YelpEvent, Trip
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        fields = ['id', 'username', 'email']
+        read_only_fields = ['id']
 
 class WeatherDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeatherData
-        fields = ['id', 'location', 'temperature', 'rain_chance', 'weather_conditions', 'timestamp']
-        read_only_fields = ['timestamp']
+        fields = ['id', 'location', 'temperature', 'description', 'timestamp', 'rain_chance', 'weather_conditions']
+        read_only_fields = ['id', 'timestamp']
 
 class YelpEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = YelpEvent
         fields = ['id', 'location', 'name', 'rating', 'price', 'categories', 'address', 'phone', 'url', 'image_url', 'timestamp']
-        read_only_fields = ['timestamp']
+        read_only_fields = ['id', 'timestamp']
+
+class TripSerializer(serializers.ModelSerializer):
+    creator = UserSerializer(read_only=True)
+    invited_users = UserSerializer(many=True, read_only=True)
+    activities = YelpEventSerializer(many=True, read_only=True)
+    creator_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='creator',
+        write_only=True
+    )
+    invited_user_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all(),
+        source='invited_users',
+        write_only=True
+    )
+    activity_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=YelpEvent.objects.all(),
+        source='activities',
+        write_only=True
+    )
+
+    class Meta:
+        model = Trip
+        fields = [
+            'id', 'creator', 'creator_id', 'start_date', 'end_date',
+            'created_at', 'updated_at', 'activities', 'activity_ids',
+            'invited_users', 'invited_user_ids', 'is_active'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if data['end_date'] < data['start_date']:
+            raise serializers.ValidationError("End date cannot be before start date")
+        return data

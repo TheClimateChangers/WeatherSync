@@ -1,14 +1,18 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
-from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer
+from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import WeatherData, YelpEvent
+from .models import WeatherData, YelpEvent, Trip
 import requests
 import logging
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.utils import timezone
+import os
+from django.db import models
+from rest_framework.decorators import action
 
 logger = logging.getLogger(__name__)
 
@@ -18,94 +22,104 @@ class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-class WeatherDataView(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+class WeatherDataView(viewsets.ModelViewSet):
+    queryset = WeatherData.objects.all()
+    serializer_class = WeatherDataSerializer
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request):
-        location = request.query_params.get('location')
+    def perform_create(self, serializer):
+        location = self.request.data.get('location')
         if not location:
-            return Response({"error": "Location parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+            raise Exception("Location is required")
 
-        api_key = settings.OPENWEATHER_API_KEY
+        api_key = os.getenv('OPENWEATHER_API_KEY')
         if not api_key:
-            logger.error("OpenWeather API key not found in settings")
-            return Response({"error": "Weather service configuration error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise Exception("OpenWeather API key not found")
 
         try:
             response = requests.get(
-                f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
+                f'http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric'
             )
             if response.status_code == 200:
                 data = response.json()
                 weather_data = {
-                    "location": location,
-                    "temperature": data["main"]["temp"],
-                    "rain_chance": data.get("rain", {}).get("1h", 0),
-                    "weather_conditions": {
-                        "main": data["weather"][0]["main"],
-                        "description": data["weather"][0]["description"],
-                        "icon": data["weather"][0]["icon"],
-                        "humidity": data["main"]["humidity"],
-                        "wind_speed": data["wind"]["speed"]
+                    'location': location,
+                    'temperature': data['main']['temp'],
+                    'description': data['weather'][0]['description'],
+                    'rain_chance': data.get('rain', {}).get('1h', 0),
+                    'weather_conditions': {
+                        'humidity': data['main']['humidity'],
+                        'wind_speed': data['wind']['speed']
                     }
                 }
-                serializer = WeatherDataSerializer(data=weather_data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer.save(**weather_data)
             else:
-                logger.error(f"OpenWeather API error: {response.status_code} - {response.text}")
-                return Response({"error": "Failed to fetch weather data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                raise Exception(f"Failed to fetch weather data: {response.status_code}")
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
-            return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise
 
-class YelpEventView(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+class YelpEventView(viewsets.ModelViewSet):
+    queryset = YelpEvent.objects.all()
+    serializer_class = YelpEventSerializer
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request):
-        location = request.query_params.get('location')
-        if not location:
-            return Response({"error": "Location parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        location = self.request.query_params.get('location', None)
+        if location:
+            return YelpEvent.objects.filter(location__icontains=location)
+        return YelpEvent.objects.all()
 
-        api_key = settings.YELP_API_KEY
-        if not api_key:
-            logger.error("Yelp API key not found in settings")
-            return Response({"error": "Yelp service configuration error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class TripViewSet(viewsets.ModelViewSet):
+    queryset = Trip.objects.all()
+    serializer_class = TripSerializer
+    permission_classes = [IsAuthenticated]
 
-        try:
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            }
-            response = requests.get(
-                f"https://api.yelp.com/v3/businesses/search?location={location}&limit=10",
-                headers=headers
+    def get_queryset(self):
+        user = self.request.user
+        return Trip.objects.filter(
+            models.Q(creator=user) | models.Q(invited_users=user)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def add_activity(self, request, pk=None):
+        trip = self.get_object()
+        activity_id = request.data.get('activity_id')
+        if not activity_id:
+            return Response(
+                {"error": "activity_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            if response.status_code == 200:
-                data = response.json()
-                events = []
-                for business in data.get("businesses", []):
-                    event_data = {
-                        "location": location,
-                        "name": business["name"],
-                        "rating": business["rating"],
-                        "price": business.get("price", ""),
-                        "categories": [cat["title"] for cat in business["categories"]],
-                        "address": ", ".join(business["location"]["display_address"]),
-                        "phone": business.get("phone", ""),
-                        "url": business.get("url", ""),
-                        "image_url": business.get("image_url", "")
-                    }
-                    serializer = YelpEventSerializer(data=event_data)
-                    if serializer.is_valid():
-                        serializer.save()
-                        events.append(serializer.data)
-                return Response(events)
-            else:
-                logger.error(f"Yelp API error: {response.status_code} - {response.text}")
-                return Response({"error": "Failed to fetch Yelp events"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except Exception as e:
-            logger.error(f"Error fetching Yelp events: {str(e)}")
-            return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        try:
+            activity = YelpEvent.objects.get(id=activity_id)
+            trip.activities.add(activity)
+            return Response({"status": "activity added"})
+        except YelpEvent.DoesNotExist:
+            return Response(
+                {"error": "Activity not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'])
+    def invite_user(self, request, pk=None):
+        trip = self.get_object()
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response(
+                {"error": "user_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = User.objects.get(id=user_id)
+            trip.invited_users.add(user)
+            return Response({"status": "user invited"})
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
