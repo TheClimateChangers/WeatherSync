@@ -1,0 +1,62 @@
+Parent Alias,Category Titles
+REGIONAL_CUISINE
+    italian,"Abruzzese, Altoatesine, Apulian, Calabrian, Cucina campana, Emilian, Friulan, Ligurian, Lumbard, Napoletana, Piemonte, Roman, Sardinian, Sicilian, Tuscan, Venetian"
+    portuguese,"Alentejo, Algarve, Azores, Beira, Fado Houses, Madeira, Minho, Ribatejo, Tras-os-Montes"
+    french,"Alsatian, Auvergnat, Berrichon, Bourguignon, Mauritius, Nicoise, Provencal, Reunion"
+    arabian,Arab Pizza
+    german,"Baden, Eastern German, Franconian, Hessian, Northern German, Palatine, Rhinelandian"
+    japanese,"Blowfish, Conveyor Belt Sushi, Donburi, Hand Rolls, Horumon, Izakaya, Japanese Curry, Kaiseki, Kushikatsu, Oden, Okinawan, Okonomiyaki, Onigiri, Ramen, Robatayaki, Soba, Sukiyaki, Takoyaki, Tempura, Teppanyaki, Tonkatsu, Udon, Unagi, Western Style Japanese Food, Yakiniku, Yakitori"
+    spanish,Arroceria / Paella
+    brazilian,"Brazilian Empanadas, Central Brazilian, Northeastern Brazilian, Northern Brazilian, Rodizios"
+    chinese,"Cantonese, Congee, Dim Sum, Fuzhou, Hainan, Hakka, Henghwa, Hokkien, Hunan, Pekinese, Shanghainese, Szechuan, Teochew"
+    turkish,"Chee Kufta, Gozleme, Homemade Food, Lahmacun, Ottoman Cuisine, Turkish Ravioli"
+    latin,"Colombian, Salvadoran, Venezuelan"
+    mexican,"Eastern Mexican, Jaliscan, Northern Mexican, Oaxacan, Pueblan, Tacos, Tamales, Yucatan"
+    mideastern,"Egyptian, Lebanese"
+    mediterranean,Falafel
+    belgian,Flemish
+    donburi,"Gyudon, Oyakodon"
+    malaysian,"Mamak, Nyonya"
+    polish,Pierogis
+    african,"Senegalese, South African"
+    jpsweets,Taiyaki
+    caribbean,"Dominican, Haitian, Puerto Rican, Trinidadian"
+FOOD_AND_DRINK
+    food,"Acai Bowls, Backshop, Bagels, Bakeries, Beer, Wine & Spirits, Bento, Beverage Store, Breweries, Bubble Tea, Butcher, CSA, Chimney Cakes, Churros, Cideries, Coffee & Tea, Coffee & Tea Supplies, Coffee Roasteries, Convenience Stores, Cupcakes, Custom Cakes, Delicatessen, Desserts, Distilleries, Do-It-Yourself Food, Donairs, Donuts, Empanadas, Ethical Grocery, Ethnic Grocery, Farmers Market, Fishmonger, Food Delivery Services, Food Trucks, Friterie, Gelato, Grocery, Hawker Centre, Honey, Ice Cream & Frozen Yogurt, Imported Food, International Grocery, Internet Cafes, Japanese Sweets, Juice Bars & Smoothies, Kiosk, Kombucha, Meaderies, Milkshake Bars, Mulled Wine, Nasi Lemak, Organic Stores, Panzerotti, Parent Cafes, Patisserie/Cake Shop, Piadina, Poke, Pretzels, Salumerie, Shaved Ice, Shaved Snow, Smokehouse, Specialty Food, Street Vendors, Sugar Shacks, Tea Rooms, Torshi, Tortillas, Water Stores, Wineries, Zapiekanka"
+    breakfast_brunch,Pancakes
+    restaurants,"Afghan, African, American, Andalusian, Arabic, Argentine, Armenian, Asian Fusion, Asturian, Australian, Austrian, Baguettes, Bangladeshi, Barbeque, Basque, Bavarian, Beer Garden, Beer Hall, Beisl, Belgian, Bistros, Black Sea, Brasseries, Brazilian, Breakfast & Brunch, British, Buffets, Bulgarian, Burgers, Burmese, Cafes, Cafeteria, Cajun/Creole, Cambodian, Canadian (New), Canteen, Caribbean, Catalan, Chech, Cheesesteaks, Chicken Shop, Chicken Wings, Chilean, Chinese, Comfort Food, Corsican, Creperies, Cuban, Curry Sausage, Cypriot, Czech, Czech/Slovakian, Danish, Delis, Diners, Dinner Theater, Dumplings, Eastern European, Eritrean, Ethiopian, Fast Food, Filipino, Fischbroetchen, Fish & Chips, Flatbread, Fondue, Food Court, Food Stands, Freiduria, French, French Southwest, Galician, Game Meat, Gastropubs, Georgian, German, Giblets, Gluten-Free, Greek, Guamanian, Halal, Hawaiian, Heuriger, Himalayan/Nepalese, Honduran, Hong Kong Style Cafe, Hot Dogs, Hot Pot, Hungarian, Iberian, Indian, Indonesian, International, Irish, Island Pub, Israeli, Italian, Japanese, Jewish, Kebab, Kopitiam, Korean, Kosher, Kurdish, Laos, Laotian, Latin American, Live/Raw Food, Lyonnais, Malaysian, Meatballs, Mediterranean, Mexican, Middle Eastern, Milk Bars, Modern Australian, Modern European, Mongolian, Moroccan, New American, New Mexican Cuisine, New Zealand, Nicaraguan, Night Food, Nikkei, Noodles, Norcinerie, Open Sandwiches, Oriental, PF/Comercial, Pakistani, Pan Asian, Parent Cafes, Parma, Persian/Iranian, Peruvian, Pita, Pizza, Polish, Polynesian, Pop-Up Restaurants, Portuguese, Potatoes, Poutineries, Pub Food, Rice, Romanian, Rotisserie Chicken, Rumanian, Russian, Salad, Sandwiches, Scandinavian, Schnitzel, Scottish, Seafood, Serbo Croatian, Signature Cuisine, Singaporean, Slovakian, Somali, Soul Food, Soup, Southern, Spanish, Sri Lankan, Steakhouses, Supper Clubs, Sushi Bars, Swabian, Swedish, Swiss Food, Syrian, Tabernas, Taiwanese, Tapas Bars, Tapas/Small Plates, Tavola Calda, Tex-Mex, Thai, Traditional Norwegian, Traditional Swedish, Trattorie, Turkish, Ukrainian, Uzbek, Vegan, Vegetarian, Venison, Vietnamese, Waffles, Wok, Wraps, Yugoslav"
+    gourmet,"Candy Stores, Cheese Shops, Chocolatiers & Shops, Dagashi, Dried Fruit, Ethnic Food, Frozen Food, Fruits & Veggies, Health Markets, Herbs & Spices, Macarons, Meat Shops, Olive Oil, Pasta Shops, Popcorn Shops, Seafood Markets, Tofu Shops"
+    bars,"Absinthe Bars, Airport Lounges, Beach Bars, Beer Bar, Champagne Bars, Cigar Bars, Cocktail Bars, Dive Bars, Drive-Thru Bars, Gay Bars, Hookah Bars, Hotel bar, Irish Pub, Lounges, Pubs, Pulquerias, Sake Bars, Speakeasies, Sports Bars, Tabac, Tiki Bars, Vermouth Bars, Whiskey Bars, Wine Bars"
+    breweries,Brewpubs
+    cafes,Themed Cafes
+    wineries,Wine Tasting Room
+ACTIVE_AND_OUTDOOR
+    parks,"Dog Parks, Skate Parks"
+    active,"ATV Rentals/Tours, Airsoft, Amateur Sports Teams, Amusement Parks, Aquariums, Archery, Axe Throwing, Badminton, Baseball Fields, Basketball Courts, Bathing Area, Batting Cages, Beach Equipment Rentals, Beach Volleyball, Beaches, Bicycle Paths, Bike Parking, Bike Rentals, Boating, Bobsledding, Bocce Ball, Bowling, Bubble Soccer, Bungee Jumping, Canyoneering, Carousels, Challenge Courses, Climbing, Cycling Classes, Dart Arenas, Day Camps, Disc Golf, Diving, Escape Games, Experiences, Fencing Clubs, Fishing, Fitness & Instruction, Flyboarding, Gliding, Go Karts, Golf, Gun/Rifle Ranges, Gymnastics, Handball, Hang Gliding, Hiking, Horse Racing, Horseback Riding, Hot Air Balloons, Indoor Playcentre, Jet Skis, Kids Activities, Kiteboarding, Lakes, Laser Tag, Lawn Bowling, Leisure Centers, Mini Golf, Mountain Biking, Nudist, Paddleboarding, Paintball, Paragliding, Parasailing, Parks, Pickleball, Playgrounds, Public Plazas, Races & Competitions, Racing Experience, Rafting/Kayaking, Recreation Centers, Rock Climbing, Sailing, Scavenger Hunts, Scooter Rentals, Senior Centers, Skating Rinks, Skiing, Skydiving, Sledding, Snorkeling, Soccer, Spin Classes, Sport Equipment Hire, Sports Clubs, Squash, Summer Camps, Surf Lifesaving, Surfing, Swimming Pools, Tennis, Trampoline Parks, Tubing, Volleyball, Water Parks, Wildlife Hunting Ranges, Ziplining, Zoos, Zorbing"
+ARTS_AND_CULTURE
+    arts,"Arcades, Art Galleries, Betting Centers, Bingo Halls, Botanical Gardens, Cabaret, Casinos, Castles, Choirs, Cinema, Country Clubs, Cultural Center, Eatertainment, Farms, Festivals, Haunted Houses, Jazz & Blues, LAN Centers, Mah Jong Halls, Makerspaces, Marching Bands, Museums, Music Venues, Observatories, Opera & Ballet, Pachinko, Paint & Sip, Performing Arts, Planetarium, Professional Sports Teams, Race Tracks, Rodeo, Social Clubs, Sports Betting, Stadiums & Arenas, Street Art, Studio Taping, Supernatural Readings, Tablao Flamenco, Ticket Sales, Virtual Reality Centers, Wineries"
+    artclasses,Glass Blowing
+    artsandcrafts,"Art Supplies, Ateliers, Cards & Stationery, Cooking Classes, Costumes, Embroidery & Crochet, Fabric Stores, Framing, Paint-Your-Own Pottery"
+    festivals,"Christmas Markets, Fun Fair, General Festivals, Trade Fairs"
+    movietheaters,"Drive-In Theater, Outdoor Movies"
+    museums,"Art Museums, Children's Museums"
+SHOPPING
+    fashion,"Accessories, Ceremonial Clothing, Children's Clothing, Clothing Rental, Department Stores, Formal Wear, Fur Clothing, Hats, Kimonos, Leather Goods, Lingerie, Maternity Wear, Men's Clothing, Plus Size Fashion, Shoe Stores, Sleepwear, Sports Wear, Stockings, Surf Shop, Swimwear, Traditional Clothing, Used, Vintage & Consignment, Women's Clothing"
+    shopping,"Adult Shops, Antiques, Art Galleries, Arts & Crafts, Auction Houses, Baby Gear & Furniture, Battery Stores, Bespoke Clothing, Books, Mags, Music & Video, Brewing Supplies, Bridal, Cannabis Dispensaries, Chinese Bazaar, Computers, Concept Shops, Cosmetics & Beauty Supply, Customized Merchandise, Department Stores, Diamond Buyers, Discount Store, Drones, Drugstores, Duty-Free Shops, Electronics, Eyewear & Opticians, Farming Equipment, Fashion, Fireworks, Fitness/Exercise Equipment, Flea Markets, Flowers & Gifts, Gemstones & Minerals, Gold Buyers, Golf Equipment Shops, Guns & Ammo, Head Shops, High Fidelity Audio Equipment, Hobby Shops, Home & Garden, Horse Equipment Shops, Jewelry, Kiosk, Knitting Supplies, Livestock Feed & Supply, Luggage, Market Stalls, Medical Supplies, Military Surplus, Mobile Phone Accessories, Mobile Phones, Motorcycle Gear, Musical Instruments & Teachers, Office Equipment, Outlet Stores, Packing Supplies, Pawn Shops, Perfume, Personal Shopping, Photography Stores & Services, Pool & Billiards, Pop-up Shops, Props, Public Markets, Religious Items, Safe Stores, Safety Equipment, Scandinavian Design, Shopping Centers, Shopping Passages, Souvenir Shops, Spiritual Shop, Sporting Goods, Tabletop Games, Teacher Supplies, Thrift Stores, Tickets, Tobacco Shops, Toy Stores, Trophy Shops, Uniforms, Used Bookstore, Vape Shops, Vitamins & Supplements, Watches, Wholesale Stores, Wigs"
+    media,"Bookstores, Comic Books, Music & DVDs, Newspapers & Magazines, Video Game Stores, Videos & Video Game Rental, Vinyl Records"
+BEAUTY
+    beautysvc,"Acne Treatment, Barbers, Cosmetics & Beauty Supply, Day Spas, Erotic Massage, Eyebrow Services, Eyelash Service, Foot Care, Hair Extensions, Hair Loss Centers, Hair Removal, Hair Salons, Hot Springs, Makeup Artists, Massage, Medical Spas, Nail Salons, Perfume, Permanent Makeup, Piercing, Rolfing, Skin Care, Tanning, Tattoo, Teeth Whitening"
+    hair,"Blow Dry/Out Services, Hair Extensions, Hair Stylists, Kids Hair Salons, Men's Hair Salons"
+    othersalons,Nail Technicians
+LOCAL_ATTRACTIONS
+    localflavor,"Parklets, Public Art, Unofficial Yelp Events, Yelp Events"
+    farms,"Attraction Farms, Pick Your Own Farms, Ranches"
+    zoos,Petting Zoos
+TOURS
+    tours,"Aerial Tours, Architectural Tours, Art Tours, Beer Tours, Bike tours, Boat Tours, Bus Tours, Food Tours, Historical Tours, Scooter Tours, Walking Tours, Whale Watching Tours, Wine Tours"
+NIGHTLIFE
+    nightlife,"Adult Entertainment, Bar Crawl, Bars, Beer Gardens, Club Crawl, Coffeeshops, Comedy Clubs, Country Dance Halls, Dance Clubs, Dance Restaurants, Fasil Music, Jazz & Blues, Karaoke, Music Venues, Piano Bars, Pool Halls"
+OTHER
+    other,"Active Life, Arts & Entertainment, Automotive, Beauty & Spas, Bicycles, Education, Event Planning & Services, Financial Services, Food, Health & Medical, Home Services, Hotels & Travel, Local Flavor, Local Services, Mass Media, Nightlife, Pets, Professional Services, Public Services & Government, Religious Organizations, Restaurants, Shopping"
+    diving,"Free Diving, Scuba Diving"
+    religiousorgs,"Afro-Brazilian, Buddhist Temples, Churches, Hindu Temples, Mosques, Shrines, Sikh Temples, Spiritism, Synagogues, Taoist Temples"
