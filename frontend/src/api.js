@@ -18,9 +18,11 @@ api.interceptors.request.use(
     }
 )
 
+const API_URL = import.meta.env.VITE_URL_API;
+
 export const getWeather = async (location) => {
     try {
-        const response = await axios.get(`${import.meta.env.VITE_URL_API}/weather/?location=${location}`);
+        const response = await axios.get(`${API_URL}/api/weather/?location=${location}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching weather:', error);
@@ -30,7 +32,7 @@ export const getWeather = async (location) => {
 
 export const getEvents = async (location) => {
     try {
-        const response = await axios.get(`${import.meta.env.VITE_URL_API}/events/?location=${location}`);
+        const response = await axios.get(`${API_URL}/api/events/?location=${location}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching events:', error);
@@ -40,7 +42,7 @@ export const getEvents = async (location) => {
 
 export const createTrip = async (tripData) => {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_URL_API}/trips/`, tripData);
+        const response = await axios.post(`${API_URL}/api/trips/`, tripData);
         return response.data;
     } catch (error) {
         console.error('Error creating trip:', error);
@@ -50,7 +52,7 @@ export const createTrip = async (tripData) => {
 
 export const getTrips = async () => {
     try {
-        const response = await axios.get(`${import.meta.env.VITE_URL_API}/trips/`);
+        const response = await axios.get(`${API_URL}/api/trips/`);
         return response.data;
     } catch (error) {
         console.error('Error fetching trips:', error);
@@ -60,7 +62,7 @@ export const getTrips = async () => {
 
 export const addActivityToTrip = async (tripId, activityId) => {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_URL_API}/trips/${tripId}/add_activity/`, {
+        const response = await axios.post(`${API_URL}/api/trips/${tripId}/add_activity/`, {
             activity_id: activityId
         });
         return response.data;
@@ -72,7 +74,7 @@ export const addActivityToTrip = async (tripId, activityId) => {
 
 export const inviteUserToTrip = async (tripId, userId) => {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_URL_API}/trips/${tripId}/invite_user/`, {
+        const response = await axios.post(`${API_URL}/api/trips/${tripId}/invite_user/`, {
             user_id: userId
         });
         return response.data;
