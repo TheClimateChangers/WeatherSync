@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getTrips } from '../api.js';
-import { Card, CardContent, Typography, Grid, Box } from '@mui/material';
 
 function TripsList() {
   const [trips, setTrips] = useState([]);
@@ -23,37 +22,28 @@ function TripsList() {
     fetchTrips();
   }, []);
 
-  if (loading) return <Typography>Loading trips...</Typography>;
-  if (error) return <Typography color="error">{error}</Typography>;
-  if (trips.length === 0) return <Typography>No trips found</Typography>;
+  if (loading) return <div className="loading">Loading trips...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (trips.length === 0) return <div className="no-trips">No trips found</div>;
 
   return (
     <div className="trips-container">
-      <h2>My Trips</h2>
-      <Grid container spacing={2}>
+      <div className="trips-grid">
         {trips.map((trip) => (
-          <Grid item xs={12} sm={6} md={4} key={trip.id}>
-            <Card className="trip-card">
-              <CardContent>
-                <Typography variant="h6" component="div">
-                  {trip.creator.username}'s Trip
-                </Typography>
-                <Typography color="text.secondary">
-                  {new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Activities: {trip.activities.length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Invited Users: {trip.invited_users.length}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+          <div className="trip-card" key={trip.id}>
+            <div className="trip-card-content">
+              <h3>{trip.creator.username}'s Trip</h3>
+              <p className="trip-dates">
+                {new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}
+              </p>
+              <div className="trip-stats">
+                <p>Activities: {trip.activities.length}</p>
+                <p>Invited Users: {trip.invited_users.length}</p>
+              </div>
+            </div>
+          </div>
         ))}
-      </Grid>
+      </div>
     </div>
   );
 }
