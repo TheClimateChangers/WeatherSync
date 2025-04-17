@@ -62,9 +62,14 @@ function Plan() {
   const [isValidRange, setIsValidRange] = useState(false);
 
   //Step 2: Activities
-  const activities = ["Hiking", "Kayaking", "Museum", "Food Tour", "Stargazing", "Beach Day", "Cycling", "Fishing", "City Walk"];
+  const activities = ["Regional Cuisine", "Food and Drink", "Active and Outdoor", "Arts and Culture"
+                      , "Shopping", "Beauty", "Local Attractions", "Tours", "Nightlife", "Other"];
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isReadyToProceed, setIsReadyToProceed] = useState(false);
+
+  //new events
+  const events = ["Sports", "Music", "Arts and Theatre", "Film", "Other"]
+  const [selectedEvents, setSelectedEvents] = useState([]);
 
   //Step 3: Users
   const followedUsers = ["mark_smith", "julian_lee", "michael_chen", "giselle_ruiz", "nate_diaz", "jackie_chan", "marcus_aurelius"];
@@ -88,16 +93,16 @@ function Plan() {
     }
   }, [startDate, endDate]);
 
-  //Activity toggle
-  const toggleActivity = (name) => {
-    setSelectedActivities((prev) =>
-      prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]
+  //changed to include activities and events
+  const toggleItem = (item, setList) => {
+    setList((prev) =>
+      prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]
     );
   };
 
   useEffect(() => {
-    setIsReadyToProceed(selectedActivities.length > 0);
-  }, [selectedActivities]);
+    setIsReadyToProceed(selectedActivities.length > 0 || selectedEvents.length > 0);
+  }, [selectedActivities, selectedEvents]);
 
   //User search
   useEffect(() => {
@@ -151,16 +156,33 @@ function Plan() {
         {activities.map((activity) => (
           <div
             key={activity}
-            onClick={() => toggleActivity(activity)}
+            onClick={() => toggleItem(activity, selectedActivities, setSelectedActivities)}
             style={activityBoxStyle(selectedActivities.includes(activity))}
           >
             {activity}
           </div>
         ))}
+
+        {selectedActivities.length > 0 && (
+          <p>Selected activities: {selectedActivities.join(", ")}</p>
+        )}
+
+        <h3>Select event:</h3>
+        {events.map((event) => (
+          <div
+            key={event}
+            onClick={() => toggleItem(event, selectedEvents, setSelectedEvents)}
+            style={activityBoxStyle(selectedEvents.includes(event))}
+          >
+          {event}
+          </div>
+        ))}
       </div>
-      {selectedActivities.length > 0 && (
-        <p>Selected: {selectedActivities.join(", ")}</p>
-      )}
+
+        {selectedEvents.length > 0 && (
+          <p>Selected events: {selectedEvents.join(", ")}</p>
+        )}
+      
       <ContinueButton
         disabled={!isReadyToProceed}
         onClick={() => setShowUserPrompt(true)}
@@ -301,7 +323,7 @@ function Plan() {
           {activities.map((activity) => (
             <div
               key={activity}
-              onClick={() => toggleActivity(activity)}
+              onClick={() => toggleItem(activity, setSelectedActivities)}
               style={activityBoxStyle(selectedActivities.includes(activity))}
             >
               {activity}
@@ -310,6 +332,30 @@ function Plan() {
         </div>
         {selectedActivities.length > 0 && (
           <p>Selected: {selectedActivities.join(", ")}</p>
+        )}
+
+        {/*Step 2: Events*/}
+        <h3>Select your events:</h3>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gap: "15px",
+            margin: "30px auto"
+          }}
+        >
+          {events.map((event) => (
+            <div
+              key={event}
+              onClick={() => toggleItem(event, setSelectedEvents)}
+              style={activityBoxStyle(selectedEvents.includes(event))}
+            >
+              {event}
+            </div>
+          ))}
+        </div>
+        {selectedEvents.length > 0 && (
+              <p>Selected: {selectedEvents.join(", ")}</p>
         )}
       </section>
   
@@ -365,6 +411,7 @@ function Plan() {
               start_date: startDate.toISOString().split("T")[0],
               end_date: endDate.toISOString().split("T")[0],
               activities: selectedActivities,
+              events: selectedEvents, //include events
               invited_users: addedUsers,
             };
   
