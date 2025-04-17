@@ -6,45 +6,23 @@ import '../styles/Plan.css';
 import DateCalendar from '../components/DateCalendar.jsx';
 import Activities from '../components/Activities.jsx';
 import AddUsers from '../components/AddUsers.jsx';
-import { useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, TextField, Paper, List, ListItem, ListItemText, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { addDays } from 'date-fns';
-import api from '../api';
 
 function Plan() {
-  const navigate = useNavigate();
-  const [startDate, setStartDate] = useState(addDays(new Date(), 1));
-  const [endDate, setEndDate] = useState(addDays(new Date(), 2));
-  const [selectedActivities, setSelectedActivities] = useState([]);
-  const [addedUsers, setAddedUsers] = useState([]);
-  const [error, setError] = useState(null);
+  const handleSubmit = () => {
+    const payload = {
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      activities: selectedActivities,
+      invited_users: addedUsers,
+    };
 
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        activity_ids: selectedActivities.map(activity => activity.id),
-        invited_user_ids: addedUsers.map(user => user.id),
-      };
-
-      const response = await api.post('/trips/', payload);
-      
-      if (response.status === 201) {
-        navigate('/my-trips');
-      } else {
-        setError('Failed to create trip. Please try again.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred while creating the trip.');
-    }
+    console.log('📦 Data to send to backend:', payload);
+    alert('Plan data has been logged to the console!');
   };
 
   //Step 1: Dates
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(null);
   const [dateRange, setDateRange] = useState('');
   const [isValidRange, setIsValidRange] = useState(false);
 
@@ -64,6 +42,7 @@ function Plan() {
     'Kids & Family',
     'Other',
   ];
+  const [selectedActivities, setSelectedActivities] = useState([]);
   const [isReadyToProceed, setIsReadyToProceed] = useState(false);
 
   //Step 3: Users
@@ -78,6 +57,7 @@ function Plan() {
   ];
   const [searchInput, setSearchInput] = useState('');
   const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [addedUsers, setAddedUsers] = useState([]);
 
   //Date change
   const onDateChange = ([start, end]) => {
@@ -125,93 +105,51 @@ function Plan() {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Plan Your Trip
-        </Typography>
+    <div className="scroll-container"
+      style={{
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        padding: '30px',
+        margin: '0 auto',
+        maxWidth: '700px',
+        textAlign: 'center',
+      }}
+    >
+      <h2 style={{ marginBottom: '30px' }}>Plan Your Trip</h2>
 
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Trip Dates
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(newValue) => setStartDate(newValue)}
-              minDate={addDays(new Date(), 1)}
-              renderInput={(params) => <TextField {...params} />}
-            />
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(newValue) => setEndDate(newValue)}
-              minDate={startDate}
-              renderInput={(params) => <TextField {...params} />}
-            />
-          </Box>
-        </Paper>
-
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Selected Activities
-          </Typography>
-          <List>
-            {selectedActivities.map((activity) => (
-              <ListItem
-                key={activity.id}
-                secondaryAction={
-                  <IconButton edge="end" onClick={() => setSelectedActivities(selectedActivities.filter(a => a.id !== activity.id))}>
-                    <DeleteIcon />
-                  </IconButton>
-                }
-              >
-                <ListItemText
-                  primary={activity.name}
-                  secondary={`Rating: ${activity.rating} | ${activity.categories.join(', ')}`}
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
-
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Invited Users
-          </Typography>
-          <List>
-            {addedUsers.map((user) => (
-              <ListItem
-                key={user.id}
-                secondaryAction={
-                  <IconButton edge="end" onClick={() => setAddedUsers(addedUsers.filter(u => u.id !== user.id))}>
-                    <DeleteIcon />
-                  </IconButton>
-                }
-              >
-                <ListItemText primary={user.username} />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
-
-        {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
-            {error}
-          </Typography>
-        )}
-
-        <Button
-          variant="contained"
-          color="primary"
+      {/* Step 0: Location */}
+      <LocationSearch />
+      {/* Step 1: Dates */}
+      <DateCalendar
+        startDate={startDate}
+        endDate={endDate}
+        onDateChange={onDateChange}
+        dateRange={dateRange}
+      />
+      {/* Step 2: Activities */}
+      <Activities
+        activities={activities}
+        selectedActivities={selectedActivities}
+        toggleActivity={toggleActivity}
+      />
+      {/* Step 3: Users */}
+      <AddUsers
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        suggestedUsers={suggestedUsers}
+        addUser={addUser}
+        addedUsers={addedUsers}
+        isReadyToProceed={isReadyToProceed}
+      />
+      {/* Submit */}
+      <div style={{ marginTop: '40px' }}>
+        <ContinueButton
           onClick={handleSubmit}
-          disabled={selectedActivities.length === 0}
-        >
-          Finish Planning
-        </Button>
-      </Box>
-    </LocalizationProvider>
+          label="Finish Planning"
+          disabled={!isValidRange || !isReadyToProceed}
+        />
+      </div>
+    </div>
   );
 }
 
