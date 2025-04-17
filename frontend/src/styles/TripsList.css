@@ -1,0 +1,31 @@
+.trips-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.trip-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out;
+}
+
+.trip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.trip-card .MuiCardContent-root {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.trip-card h6 {
+    margin-bottom: 10px;
+}
+
+.trip-card .MuiTypography-body2 {
+    margin-top: 5px;
+} 

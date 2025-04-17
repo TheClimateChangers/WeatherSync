@@ -6,18 +6,40 @@ import '../styles/Plan.css';
 import DateCalendar from '../components/DateCalendar.jsx';
 import Activities from '../components/Activities.jsx';
 import AddUsers from '../components/AddUsers.jsx';
+import { createTrip } from '../api.js';
 
 function Plan() {
-  const handleSubmit = () => {
-    const payload = {
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0],
-      activities: selectedActivities,
-      invited_users: addedUsers,
-    };
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-    console.log('📦 Data to send to backend:', payload);
-    alert('Plan data has been logged to the console!');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const payload = {
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        activity_ids: selectedActivities.map(activity => activity.id), // Assuming activities have IDs
+        invited_user_ids: addedUsers.map(user => user.id), // Assuming users have IDs
+      };
+
+      const response = await createTrip(payload);
+      console.log('Trip created successfully:', response);
+      alert('Trip created successfully!');
+      
+      // Reset form or navigate to trips list
+      setSelectedActivities([]);
+      setAddedUsers([]);
+      setStartDate(new Date());
+      setEndDate(null);
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      setError('Failed to create trip. Please try again.');
+      alert('Failed to create trip. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   //Step 1: Dates
