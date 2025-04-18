@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getProfile, followUser } from '../api';
 import { ACCESS_TOKEN } from '../constants';
 import '../styles/Profile.css';
 
 function Profile() {
-  const { username } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,20 +13,13 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // If no username is provided, redirect to the current user's profile
-        if (!username) {
-          const token = localStorage.getItem(ACCESS_TOKEN);
-          if (!token) {
-            navigate('/login');
-            return;
-          }
-          // Get current user's profile
-          const data = await getProfile('me');
-          setProfile(data);
-        } else {
-          const data = await getProfile(username);
-          setProfile(data);
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) {
+          navigate('/login');
+          return;
         }
+        const data = await getProfile('me');
+        setProfile(data);
         setError(null);
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -41,7 +33,7 @@ function Profile() {
     };
 
     fetchProfile();
-  }, [username, navigate]);
+  }, [navigate]);
 
   const handleFollow = async () => {
     try {

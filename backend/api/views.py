@@ -131,6 +131,13 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             return UserProfile.objects.all()
         return UserProfile.objects.filter(user=self.request.user)
 
+    def retrieve(self, request, *args, **kwargs):
+        if kwargs.get('pk') == 'me':
+            instance = request.user.profile
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        return super().retrieve(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def follow(self, request, pk=None):
         profile = self.get_object()

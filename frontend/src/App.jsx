@@ -24,13 +24,13 @@ function Logout() {
   return <Navigate to="/login" />;
 }
 
-// Redirects to current user's profile
-function ProfileRedirect() {
+// Protected route wrapper
+function Protected({ children }) {
   const token = localStorage.getItem(ACCESS_TOKEN);
   if (!token) {
     return <Navigate to="/login" />;
   }
-  return <Navigate to="/profile/me" />;
+  return children;
 }
 
 function App() {
@@ -44,8 +44,11 @@ function App() {
           <Route path="register" element={<RegisterAndLogout />} />
           <Route path="logout" element={<Logout />} />
           <Route path="plan" element={<Plan />} />
-          <Route path="profile" element={<ProfileRedirect />} />
-          <Route path="profile/:username" element={<Profile />} />
+          <Route path="profile" element={
+            <Protected>
+              <Profile />
+            </Protected>
+          } />
           <Route path="trips" element={<Trips />} />
           <Route path="custom-trip" element={<CustomPlan />} />
           <Route path="*" element={<NotFound />} />
