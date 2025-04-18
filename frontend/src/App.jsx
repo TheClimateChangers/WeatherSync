@@ -23,6 +23,15 @@ function Logout() {
   return <Navigate to="/login" />;
 }
 
+// Redirects to current user's profile
+function ProfileRedirect() {
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+  return <Navigate to="/profile/me" />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -34,10 +43,11 @@ function App() {
           <Route path="register" element={<RegisterAndLogout />} />
           <Route path="logout" element={<Logout />} />
           <Route path="plan" element={<Plan />} />
+          <Route path="profile" element={<ProfileRedirect />} />
           <Route path="profile/:username" element={<Profile />} />
           <Route path="trips" element={<Trips />} />
           <Route path="custom-trip" element={<CustomPlan />} />
-          <Route path="" element={<NotFound />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>
