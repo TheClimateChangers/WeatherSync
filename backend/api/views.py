@@ -128,14 +128,15 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'list':
-            return UserProfile.objects.all()
-        return UserProfile.objects.filter(user=self.request.user)
+            return UserProfile.objects.filter(user=self.request.user)
+        return UserProfile.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        if kwargs.get('pk') == 'me':
-            instance = request.user.profile
-            serializer = self.get_serializer(instance)
-            return Response(serializer.data)
+        if str(kwargs.get('pk')) != str(request.user.id):
+            return Response(
+                {"error": "You can only access your own profile"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         return super().retrieve(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
@@ -153,12 +154,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             profile.followers.add(request.user)
             current_user_profile.following.add(profile.user)
             return Response({'status': 'followed'})
-
-    @action(detail=False)
-    def me(self, request):
-        profile = request.user.profile
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
 
     @action(detail=False)
     def following(self, request):
