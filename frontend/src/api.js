@@ -85,17 +85,17 @@ export const inviteUserToTrip = async (tripId, userId) => {
 };
 
 export const getProfile = async () => {
-    const response = await api.get('/profiles/');
+    const response = await api.get('/api/profiles/');
     return response.data;
 };
 
 export const followUser = async (profileId) => {
-    const response = await api.post(`/profiles/${profileId}/follow/`);
+    const response = await api.post(`/api/profiles/${profileId}/follow/`);
     return response.data;
 };
 
 export const updateProfile = async (profileData) => {
-    const response = await api.patch('/profiles/', profileData);
+    const response = await api.patch('/api/profiles/', profileData);
     return response.data;
 };
 
