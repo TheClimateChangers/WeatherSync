@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import WeatherData, YelpEvent, Trip
+from .models import WeatherData, YelpEvent, Trip, UserProfile
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,3 +55,24 @@ class TripSerializer(serializers.ModelSerializer):
         if data['end_date'] < data['start_date']:
             raise serializers.ValidationError("End date cannot be before start date")
         return data
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    follower_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+    trips_created_count = serializers.IntegerField(read_only=True)
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'email', 'profile_picture', 
+                 'follower_count', 'following_count', 'trips_created_count', 
+                 'is_following', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user in obj.followers.all()
+        return False

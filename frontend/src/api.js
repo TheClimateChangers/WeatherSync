@@ -84,4 +84,19 @@ export const inviteUserToTrip = async (tripId, userId) => {
     }
 };
 
+export const getProfile = async (username) => {
+    const response = await api.get(`/profiles/${username}/`);
+    return response.data;
+};
+
+export const followUser = async (profileId) => {
+    const response = await api.post(`/profiles/${profileId}/follow/`);
+    return response.data;
+};
+
+export const updateProfile = async (profileData) => {
+    const response = await api.patch('/profiles/me/', profileData);
+    return response.data;
+};
+
 export default api

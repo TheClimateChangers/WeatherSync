@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
-from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer
+from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer, UserProfileSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import WeatherData, YelpEvent, Trip
+from .models import WeatherData, YelpEvent, Trip, UserProfile
 import requests
 import logging
 from django.conf import settings
@@ -120,3 +120,48 @@ class TripViewSet(viewsets.ModelViewSet):
                 {"error": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return UserProfile.objects.all()
+        return UserProfile.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def follow(self, request, pk=None):
+        profile = self.get_object()
+        current_user_profile = request.user.profile
+        
+        if request.user in profile.followers.all():
+            # Unfollow
+            profile.followers.remove(request.user)
+            current_user_profile.following.remove(profile.user)
+            return Response({'status': 'unfollowed'})
+        else:
+            # Follow
+            profile.followers.add(request.user)
+            current_user_profile.following.add(profile.user)
+            return Response({'status': 'followed'})
+
+    @action(detail=False)
+    def me(self, request):
+        profile = request.user.profile
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
+    @action(detail=False)
+    def following(self, request):
+        following_profiles = UserProfile.objects.filter(user__in=request.user.profile.following.all())
+        serializer = self.get_serializer(following_profiles, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False)
+    def followers(self, request):
+        followers = request.user.profile.followers.all()
+        profiles = UserProfile.objects.filter(user__in=followers)
+        serializer = self.get_serializer(profiles, many=True)
+        return Response(serializer.data)
