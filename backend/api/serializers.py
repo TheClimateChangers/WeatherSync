@@ -58,21 +58,20 @@ class TripSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
-    follower_count = serializers.IntegerField(read_only=True)
-    following_count = serializers.IntegerField(read_only=True)
-    trips_created_count = serializers.IntegerField(read_only=True)
-    is_following = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    trips_count = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'profile_picture', 
-                 'follower_count', 'following_count', 'trips_created_count', 
-                 'is_following', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'username', 'profile_picture', 'followers_count', 'following_count', 'trips_count']
+        read_only_fields = ['id', 'username', 'followers_count', 'following_count', 'trips_count']
 
-    def get_is_following(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return request.user in obj.followers.all()
-        return False
+    def get_followers_count(self, obj):
+        return obj.followers_count
+
+    def get_following_count(self, obj):
+        return obj.following_count
+
+    def get_trips_count(self, obj):
+        return obj.trips_count

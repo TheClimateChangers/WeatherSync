@@ -60,15 +60,13 @@ class Trip(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    followers = models.ManyToManyField(User, related_name='following', blank=True)
-    following = models.ManyToManyField(User, related_name='followers', blank=True)
+    followers = models.ManyToManyField(User, related_name='following_profiles', blank=True)
+    following = models.ManyToManyField(User, related_name='followed_by', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username}'s Profile"
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def follower_count(self):
+    def followers_count(self):
         return self.followers.count()
 
     @property
@@ -76,8 +74,11 @@ class UserProfile(models.Model):
         return self.following.count()
 
     @property
-    def trips_created_count(self):
-        return self.user.created_trips.count()
+    def trips_count(self):
+        return self.user.trips_created.count()
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
