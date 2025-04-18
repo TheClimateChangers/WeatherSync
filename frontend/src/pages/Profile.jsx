@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProfile, followUser } from '../api';
+import { ACCESS_TOKEN } from '../constants';
 import '../styles/Profile.css';
 
 function Profile() {
@@ -15,7 +16,7 @@ function Profile() {
       try {
         // If no username is provided, redirect to the current user's profile
         if (!username) {
-          const token = localStorage.getItem('access_token');
+          const token = localStorage.getItem(ACCESS_TOKEN);
           if (!token) {
             navigate('/login');
             return;

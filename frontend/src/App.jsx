@@ -10,6 +10,7 @@ import CustomPlan from './pages/CustomPlan';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout'; //  fixed casing
+import { ACCESS_TOKEN } from './constants';
 
 // Logs out then shows Register
 function RegisterAndLogout() {
@@ -25,7 +26,7 @@ function Logout() {
 
 // Redirects to current user's profile
 function ProfileRedirect() {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem(ACCESS_TOKEN);
   if (!token) {
     return <Navigate to="/login" />;
   }
