@@ -28,28 +28,16 @@ function Profile() {
     const fetchProfile = async () => {
         try {
             const data = await getProfile();
-            if (data && data.length > 0) {
-                setProfile(data[0]);
-                setFormData({
-                    bio: data[0]?.bio || '',
-                    location: data[0]?.location || '',
-                    website: data[0]?.website || ''
-                });
-                setError(null);
-            } else {
-                // If no profile exists, show the edit form
-                setIsEditing(true);
-                setError('Please create your profile');
-            }
+            setProfile(data[0]); // Get the first (and only) profile from the list
+            setFormData({
+                bio: data[0]?.bio || '',
+                location: data[0]?.location || '',
+                website: data[0]?.website || ''
+            });
+            setError(null);
         } catch (err) {
-            if (err.response?.status === 404) {
-                // If profile not found, show the edit form
-                setIsEditing(true);
-                setError('Please create your profile');
-            } else {
-                setError('Failed to load profile');
-                console.error('Error fetching profile:', err);
-            }
+            setError('Failed to load profile');
+            console.error('Error fetching profile:', err);
         } finally {
             setLoading(false);
         }
@@ -72,18 +60,34 @@ function Profile() {
             setIsEditing(false);
         } catch (err) {
             console.error('Error updating profile:', err);
-            setError('Failed to update profile');
         }
     };
 
     if (loading) return <div className="profile-container">Loading...</div>;
-    if (error && !isEditing) return <div className="profile-container">{error}</div>;
+    if (error) return <div className="profile-container">{error}</div>;
+    if (!profile) return <div className="profile-container">Profile not found</div>;
 
     return (
         <div className="profile-container">
-            {!profile && isEditing ? (
+            <div className="profile-header">
+                <img 
+                    src={profile.profile_picture || 'https://via.placeholder.com/150'} 
+                    alt="Profile" 
+                    className="profile-picture"
+                />
+                <div className="profile-info">
+                    <h1>{profile.user.username}</h1>
+                    <p className="bio">{profile.bio}</p>
+                    <div className="profile-stats">
+                        <span>{profile.followers_count} Followers</span>
+                        <span>{profile.following_count} Following</span>
+                        <span>{profile.trips_count} Trips</span>
+                    </div>
+                </div>
+            </div>
+
+            {isEditing ? (
                 <form onSubmit={handleSubmit} className="profile-edit-form">
-                    <h2>Create Your Profile</h2>
                     <div className="form-group">
                         <label>Bio</label>
                         <textarea
@@ -111,88 +115,35 @@ function Profile() {
                         />
                     </div>
                     <div className="form-actions">
-                        <button type="submit" className="save-button">Create Profile</button>
+                        <button type="submit" className="save-button">Save Changes</button>
+                        <button type="button" onClick={() => setIsEditing(false)} className="cancel-button">
+                            Cancel
+                        </button>
                     </div>
                 </form>
-            ) : profile ? (
-                <>
-                    <div className="profile-header">
-                        <img 
-                            src={profile.profile_picture || 'https://via.placeholder.com/150'} 
-                            alt="Profile" 
-                            className="profile-picture"
-                        />
-                        <div className="profile-info">
-                            <h1>{profile.user.username}</h1>
-                            <p className="bio">{profile.bio}</p>
-                            <div className="profile-stats">
-                                <span>{profile.followers_count} Followers</span>
-                                <span>{profile.following_count} Following</span>
-                                <span>{profile.trips_count} Trips</span>
-                            </div>
-                        </div>
-                    </div>
+            ) : (
+                <div className="profile-actions">
+                    <button onClick={() => setIsEditing(true)} className="edit-button">
+                        Edit Profile
+                    </button>
+                </div>
+            )}
 
-                    {isEditing ? (
-                        <form onSubmit={handleSubmit} className="profile-edit-form">
-                            <div className="form-group">
-                                <label>Bio</label>
-                                <textarea
-                                    value={formData.bio}
-                                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                                    placeholder="Tell us about yourself"
-                                />
+            <div className="profile-content">
+                <h2>Recent Trips</h2>
+                {profile.recent_trips && profile.recent_trips.length > 0 ? (
+                    <div className="trips-grid">
+                        {profile.recent_trips.map(trip => (
+                            <div key={trip.id} className="trip-card">
+                                <h3>{trip.title}</h3>
+                                <p>{trip.description}</p>
                             </div>
-                            <div className="form-group">
-                                <label>Location</label>
-                                <input
-                                    type="text"
-                                    value={formData.location}
-                                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                                    placeholder="Your location"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Website</label>
-                                <input
-                                    type="url"
-                                    value={formData.website}
-                                    onChange={(e) => setFormData({...formData, website: e.target.value})}
-                                    placeholder="Your website"
-                                />
-                            </div>
-                            <div className="form-actions">
-                                <button type="submit" className="save-button">Save Changes</button>
-                                <button type="button" onClick={() => setIsEditing(false)} className="cancel-button">
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    ) : (
-                        <div className="profile-actions">
-                            <button onClick={() => setIsEditing(true)} className="edit-button">
-                                Edit Profile
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="profile-content">
-                        <h2>Recent Trips</h2>
-                        {profile.recent_trips && profile.recent_trips.length > 0 ? (
-                            <div className="trips-grid">
-                                {profile.recent_trips.map(trip => (
-                                    <div key={trip.id} className="trip-card">
-                                        <h3>{trip.title}</h3>
-                                        <p>{trip.description}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p>No trips yet</p>
-                        )}
+                        ))}
                     </div>
-                </>
-            ) : null}
+                ) : (
+                    <p>No trips yet</p>
+                )}
+            </div>
         </div>
     );
 }
