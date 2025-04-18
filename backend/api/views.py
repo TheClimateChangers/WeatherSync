@@ -128,8 +128,33 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'list':
-            return UserProfile.objects.filter(user=self.request.user)
+            try:
+                # Get the current user's profile
+                profile = self.request.user.profile
+                logger.info(f"Found profile for user {self.request.user.username}")
+                return UserProfile.objects.filter(id=profile.id)
+            except UserProfile.DoesNotExist:
+                logger.warning(f"No profile found for user {self.request.user.username}")
+                return UserProfile.objects.none()
         return UserProfile.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            if not queryset.exists():
+                logger.warning("No profile found in queryset")
+                return Response(
+                    {"error": "Profile not found. Please create a profile."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error in list action: {str(e)}")
+            return Response(
+                {"error": "An error occurred while fetching the profile"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def retrieve(self, request, *args, **kwargs):
         if str(kwargs.get('pk')) != str(request.user.id):
