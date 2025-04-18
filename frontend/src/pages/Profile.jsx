@@ -10,7 +10,7 @@ const Profile = () => {
     tripsCreated: 12,
     accountCreated: "2023-10-15",
     followers: 24,
-    friends: 8,
+    following: 8,
   };
 
   const handleSave = () => {
@@ -158,8 +158,8 @@ const Profile = () => {
           <p className="font-medium">{stats.followers}</p>
         </div>
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-600 font-medium">Friends</p>
-          <p className="font-medium">{stats.friends}</p>
+          <p className="text-sm text-gray-600 font-medium">Following</p>
+          <p className="font-medium">{stats.following}</p>
         </div>
       </div>
 
