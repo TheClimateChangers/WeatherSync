@@ -85,7 +85,8 @@ export const inviteUserToTrip = async (tripId, userId) => {
 };
 
 export const getProfile = async (username) => {
-    const response = await api.get(`/profiles/${username}/`);
+    const endpoint = username === 'me' ? '/profiles/me/' : `/profiles/${username}/`;
+    const response = await api.get(endpoint);
     return response.data;
 };
 
