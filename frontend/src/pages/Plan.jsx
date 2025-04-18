@@ -7,6 +7,7 @@ import DateCalendar from '../components/DateCalendar.jsx';
 import Activities from '../components/Activities.jsx';
 import AddUsers from '../components/AddUsers.jsx';
 import { createTrip } from '../api.js';
+import { ACCESS_TOKEN } from '../constants';
 
 function Plan() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,11 +18,40 @@ function Plan() {
     setError(null);
 
     try {
+      // Get the current user's ID from the token
+      const token = localStorage.getItem(ACCESS_TOKEN);
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+
+      // Decode the token to get user info
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const creatorId = tokenPayload.user_id;
+
       const payload = {
+        creator_id: creatorId,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
-        activity_ids: selectedActivities.map(activity => activity.id), // Assuming activities have IDs
-        invited_user_ids: addedUsers.map(user => user.id), // Assuming users have IDs
+        activity_ids: selectedActivities.map(activity => {
+          // Map activity names to their corresponding IDs
+          const activityMap = {
+            'Music': 1,
+            'Visual Arts': 2,
+            'Performing Arts': 3,
+            'Film': 4,
+            'Lectures & books': 5,
+            'Fashion': 6,
+            'Food & Drink': 7,
+            'Festivals & Fairs': 8,
+            'Charities': 9,
+            'Sports & Active Life': 10,
+            'Nightlife': 11,
+            'Kids & Family': 12,
+            'Other': 13
+          };
+          return activityMap[activity];
+        }),
+        invited_user_ids: addedUsers.map(user => user.id || user), // Handle both object and string user IDs
       };
 
       const response = await createTrip(payload);
