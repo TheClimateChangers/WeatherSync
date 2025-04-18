@@ -99,4 +99,9 @@ export const updateProfile = async (profileData) => {
     return response.data;
 };
 
+export const login = async (credentials) => {
+    const response = await axios.post(`${API_URL}/api/token/`, credentials);
+    return response.data;
+};
+
 export default api
