@@ -64,6 +64,64 @@ class WeatherForecastView(viewsets.ModelViewSet):
     serializer_class = WeatherForecastSerializer
     permission_classes = [AllowAny]
 
+    def get_queryset(self):
+        location = self.request.query_params.get('location', None)
+        if location:
+            # Check if we already have recent data for this location (less than 3 hours old)
+            three_hours_ago = timezone.now() - timezone.timedelta(hours=3)
+            recent_forecasts = WeatherForecast.objects.filter(
+                location__iexact=location,
+                timestamp__gte=three_hours_ago
+            )
+            
+            if recent_forecasts.exists():
+                return recent_forecasts
+            else:
+                # No recent data, fetch new data
+                try:
+                    self.fetch_forecast_data(location)
+                    return WeatherForecast.objects.filter(location__iexact=location)
+                except Exception as e:
+                    logger.error(f"Error fetching forecast data: {str(e)}")
+                    return WeatherForecast.objects.none()
+        
+        return WeatherForecast.objects.all()
+
+    def fetch_forecast_data(self, location):
+        """Fetch weather forecast data from OpenWeatherMap API"""
+        api_key = os.getenv('OPENWEATHER_API_KEY')
+        if not api_key:
+            raise Exception("OpenWeather API key not found")
+
+        # Get 5-day forecast data
+        response = requests.get(
+            f'http://api.openweathermap.org/data/2.5/forecast?q={location}&appid={api_key}&units=metric'
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Clear existing forecasts for this location
+            WeatherForecast.objects.filter(location__iexact=location).delete()
+            
+            # Process and save forecast data
+            for forecast in data['list']:
+                forecast_date = timezone.datetime.fromtimestamp(forecast['dt'], tz=timezone.utc).date()
+                forecast_obj = WeatherForecast.objects.create(
+                    location=location,
+                    forecast_date=forecast_date,
+                    temperature_min=forecast['main']['temp_min'],
+                    temperature_max=forecast['main']['temp_max'],
+                    description=forecast['weather'][0]['description'],
+                    rain_chance=forecast.get('pop', 0) * 100,  # Convert probability to percentage
+                    weather_conditions={
+                        'humidity': forecast['main']['humidity'],
+                        'wind_speed': forecast['wind']['speed']
+                    }
+                )
+        else:
+            raise Exception(f"Failed to fetch forecast data: {response.status_code}")
+
     def perform_create(self, serializer):
         location = self.request.data.get('location')
         if not location:
