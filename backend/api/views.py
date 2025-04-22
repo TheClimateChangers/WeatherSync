@@ -25,7 +25,7 @@ class CreateUserView(generics.CreateAPIView):
 class WeatherDataView(viewsets.ModelViewSet):
     queryset = WeatherData.objects.all()
     serializer_class = WeatherDataSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         location = self.request.data.get('location')
@@ -62,7 +62,7 @@ class WeatherDataView(viewsets.ModelViewSet):
 class WeatherForecastView(viewsets.ModelViewSet):
     queryset = WeatherForecast.objects.all()
     serializer_class = WeatherForecastSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         location = self.request.data.get('location')
@@ -109,7 +109,7 @@ class WeatherForecastView(viewsets.ModelViewSet):
 class YelpEventView(viewsets.ModelViewSet):
     queryset = YelpEvent.objects.all()
     serializer_class = YelpEventSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         location = self.request.query_params.get('location', None)
