@@ -15,6 +15,19 @@ class WeatherData(models.Model):
     def __str__(self):
         return f"{self.location} - {self.temperature}°C - {self.description}"
 
+class WeatherForecast(models.Model):
+    location = models.CharField(max_length=255)
+    forecast_date = models.DateField()
+    temperature_min = models.FloatField()
+    temperature_max = models.FloatField()
+    description = models.CharField(max_length=255)
+    rain_chance = models.FloatField(default=0.0)
+    weather_conditions = models.JSONField(default=dict)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.location} - {self.forecast_date} - {self.temperature_min}°C to {self.temperature_max}°C"
+
 class YelpEvent(models.Model):
     location = models.CharField(max_length=255)
     name = models.CharField(max_length=255)

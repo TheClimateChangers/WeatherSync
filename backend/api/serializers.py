@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import WeatherData, YelpEvent, Trip, UserProfile
+from .models import WeatherData, YelpEvent, Trip, UserProfile, WeatherForecast
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,6 +12,12 @@ class WeatherDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeatherData
         fields = ['id', 'location', 'temperature', 'description', 'timestamp', 'rain_chance', 'weather_conditions']
+        read_only_fields = ['id', 'timestamp']
+
+class WeatherForecastSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeatherForecast
+        fields = ['id', 'location', 'forecast_date', 'temperature_min', 'temperature_max', 'description', 'rain_chance', 'weather_conditions', 'timestamp']
         read_only_fields = ['id', 'timestamp']
 
 class YelpEventSerializer(serializers.ModelSerializer):

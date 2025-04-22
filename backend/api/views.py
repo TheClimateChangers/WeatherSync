@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
-from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer, UserProfileSerializer
+from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer, UserProfileSerializer, WeatherForecastSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import WeatherData, YelpEvent, Trip, UserProfile
+from .models import WeatherData, YelpEvent, Trip, UserProfile, WeatherForecast
 import requests
 import logging
 from django.conf import settings
@@ -57,6 +57,53 @@ class WeatherDataView(viewsets.ModelViewSet):
                 raise Exception(f"Failed to fetch weather data: {response.status_code}")
         except Exception as e:
             logger.error(f"Error fetching weather data: {str(e)}")
+            raise
+
+class WeatherForecastView(viewsets.ModelViewSet):
+    queryset = WeatherForecast.objects.all()
+    serializer_class = WeatherForecastSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        location = self.request.data.get('location')
+        if not location:
+            raise Exception("Location is required")
+
+        api_key = os.getenv('OPENWEATHER_API_KEY')
+        if not api_key:
+            raise Exception("OpenWeather API key not found")
+
+        try:
+            # Get 5-day forecast data
+            response = requests.get(
+                f'http://api.openweathermap.org/data/2.5/forecast?q={location}&appid={api_key}&units=metric'
+            )
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Clear existing forecasts for this location
+                WeatherForecast.objects.filter(location=location).delete()
+                
+                # Process and save forecast data
+                for forecast in data['list']:
+                    forecast_date = timezone.datetime.fromtimestamp(forecast['dt']).date()
+                    weather_data = {
+                        'location': location,
+                        'forecast_date': forecast_date,
+                        'temperature_min': forecast['main']['temp_min'],
+                        'temperature_max': forecast['main']['temp_max'],
+                        'description': forecast['weather'][0]['description'],
+                        'rain_chance': forecast.get('pop', 0) * 100,  # Convert probability to percentage
+                        'weather_conditions': {
+                            'humidity': forecast['main']['humidity'],
+                            'wind_speed': forecast['wind']['speed']
+                        }
+                    }
+                    serializer.save(**weather_data)
+            else:
+                raise Exception(f"Failed to fetch forecast data: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Error fetching forecast data: {str(e)}")
             raise
 
 class YelpEventView(viewsets.ModelViewSet):
