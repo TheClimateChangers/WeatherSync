@@ -8,6 +8,7 @@ function Profile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [tokenType, setTokenType] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -16,6 +17,21 @@ function Profile() {
             navigate('/login');
             return;
         }
+        
+        // Try to determine the token type (helpful for debugging)
+        try {
+            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+            setTokenType(tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com') 
+                ? 'Google Firebase' 
+                : 'Django JWT');
+            console.log('Auth token type:', tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com') 
+                ? 'Google Firebase' 
+                : 'Django JWT');
+        } catch (e) {
+            console.error('Error parsing token:', e);
+            setTokenType('Unknown');
+        }
+        
         fetchProfile();
     }, [navigate]);
 
@@ -58,7 +74,20 @@ function Profile() {
     };
 
     if (loading) return <div className="profile-container">Loading profile...</div>;
-    if (error) return <div className="profile-container error">{error}</div>;
+    if (error) return (
+        <div className="profile-container">
+            <div className="error">{error}</div>
+            {tokenType && (
+                <div className="debug-info">
+                    <p>Authentication type: {tokenType}</p>
+                    <p>User ID from localStorage: {localStorage.getItem('DJANGO_USER_ID')}</p>
+                    <button onClick={() => navigate('/login')} className="login-again-btn">
+                        Login Again
+                    </button>
+                </div>
+            )}
+        </div>
+    );
     if (!profile) return <div className="profile-container">Profile not found</div>;
 
     // Get data with fallbacks for any missing properties
@@ -81,6 +110,9 @@ function Profile() {
                         <span>{followersCount} Followers</span>
                         <span>{followingCount} Following</span>
                         <span>{tripsCount} Trips</span>
+                    </div>
+                    <div className="auth-type">
+                        {tokenType && <small>Auth: {tokenType}</small>}
                     </div>
                 </div>
             </div>

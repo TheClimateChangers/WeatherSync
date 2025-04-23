@@ -4,6 +4,7 @@ from rest_framework import generics, viewsets, status
 from .serializers import UserSerializer, WeatherDataSerializer, YelpEventSerializer, TripSerializer, UserProfileSerializer, WeatherForecastSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import WeatherData, YelpEvent, Trip, UserProfile, WeatherForecast
+from .authentication import FirebaseOrJWTAuthentication
 import requests
 import logging
 from django.conf import settings
@@ -356,6 +357,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    
+    # Use our custom authentication class
+    authentication_classes = [FirebaseOrJWTAuthentication]
 
     def get_queryset(self):
         if self.action == 'list':
@@ -378,6 +382,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         try:
             # The user is already authenticated through JWT, so we can access request.user
             user = request.user
+            logger.info(f"Profile requested for user: {user.username}")
             
             # Attempt to get the user's profile
             try:
@@ -386,6 +391,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data)
             except UserProfile.DoesNotExist:
                 # If profile doesn't exist but user does, create one
+                logger.info(f"Creating new profile for user: {user.username}")
                 profile = UserProfile.objects.create(user=user)
                 serializer = self.get_serializer(profile)
                 return Response(serializer.data)
