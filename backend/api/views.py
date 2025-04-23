@@ -357,55 +357,69 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        user = self.request.user
-        
-        # Handle the 'me' endpoint
-        if self.kwargs.get('pk') == 'me' and user.is_authenticated:
-            # For /profiles/me/ endpoint, return only current user's profile
-            return UserProfile.objects.filter(user=user)
-        
-        # For authenticated users viewing their profile list
-        if self.action == 'list' and user.is_authenticated:
-            return UserProfile.objects.filter(user=user)
-            
-        # For regular list endpoints, return all profiles
-        return UserProfile.objects.all()
-
-    def retrieve(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """
+        Special endpoint to get the current user's profile
+        """
         try:
-            # Handle the 'me' endpoint for authenticated users
-            if kwargs.get('pk') == 'me':
-                if not request.user.is_authenticated:
-                    return Response(
-                        {"error": "Authentication required to access your profile"},
-                        status=status.HTTP_401_UNAUTHORIZED
-                    )
-                kwargs['pk'] = request.user.pk
-                
-            return super().retrieve(request, *args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error retrieving profile: {str(e)}")
+            # Make sure user is authenticated
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            # Get the profile for the current user
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
             return Response(
-                {"error": f"Error retrieving profile: {str(e)}"},
+                {"error": "Profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error fetching profile: {str(e)}")
+            return Response(
+                {"error": f"Server error: {str(e)}", "detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def get_queryset(self):
+        """Get appropriate queryset based on action"""
+        return UserProfile.objects.all()
+
     @action(detail=True, methods=['post'])
     def follow(self, request, pk=None):
-        profile = self.get_object()
-        current_user_profile = request.user.profile
-        
-        if request.user in profile.followers.all():
-            # Unfollow
-            profile.followers.remove(request.user)
-            current_user_profile.following.remove(profile.user)
-            return Response({'status': 'unfollowed'})
-        else:
-            # Follow
-            profile.followers.add(request.user)
-            current_user_profile.following.add(profile.user)
-            return Response({'status': 'followed'})
+        try:
+            profile = self.get_object()
+            
+            # Ensure user is authenticated
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required to follow users"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            current_user_profile = UserProfile.objects.get(user=request.user)
+            
+            if request.user in profile.followers.all():
+                # Unfollow
+                profile.followers.remove(request.user)
+                current_user_profile.following.remove(profile.user)
+                return Response({'status': 'unfollowed'})
+            else:
+                # Follow
+                profile.followers.add(request.user)
+                current_user_profile.following.add(profile.user)
+                return Response({'status': 'followed'})
+        except Exception as e:
+            logger.error(f"Error in follow action: {str(e)}")
+            return Response(
+                {"error": f"Error processing follow request: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False)
     def following(self, request):
