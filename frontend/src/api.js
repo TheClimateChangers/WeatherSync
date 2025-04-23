@@ -100,13 +100,23 @@ export const updateProfile = async (profileData) => {
 };
 
 export const login = async (credentials) => {
-    const response = await axios.post(`${API_URL}/api/token/`, credentials);
-    return response.data;
+    try {
+        const response = await axios.post(`${API_URL}/api/token/`, credentials);
+        return response.data;
+    } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+    }
 };
 
 export const register = async (userData) => {
-    const response = await axios.post(`${API_URL}/api/register/`, userData);
-    return response.data;
+    try {
+        const response = await axios.post(`${API_URL}/api/register/`, userData);
+        return response.data;
+    } catch (error) {
+        console.error('Registration error:', error);
+        throw error;
+    }
 };
 
 export default api

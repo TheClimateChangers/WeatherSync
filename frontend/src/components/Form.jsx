@@ -13,6 +13,7 @@ function Form({ route, method }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const navigate = useNavigate();
     const { login } = useContext(AuthContext);
 
@@ -20,6 +21,7 @@ function Form({ route, method }) {
 
     const handleSubmit = async (e) => {
         setLoading(true);
+        setError("");
         e.preventDefault();
 
         try {
@@ -35,13 +37,34 @@ function Form({ route, method }) {
                 navigate("/login");
             }
         } catch (error) {
-            alert(error);
+            console.error("Error:", error);
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error("Response data:", error.response.data);
+                if (typeof error.response.data === 'object') {
+                    const errorMessages = [];
+                    for (const key in error.response.data) {
+                        errorMessages.push(`${key}: ${error.response.data[key]}`);
+                    }
+                    setError(errorMessages.join(', '));
+                } else {
+                    setError(error.response.data || "An error occurred");
+                }
+            } else if (error.request) {
+                // The request was made but no response was received
+                setError("No response from server. Please try again later.");
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                setError(error.message || "An unexpected error occurred");
+            }
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleLogin = async () => {
+        setError("");
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' })
         try {
@@ -56,19 +79,21 @@ function Form({ route, method }) {
             navigate("/");
         } catch (error) {
             console.error(error);
-            alert("Google login failed");
+            setError("Google login failed: " + error.message);
         }
     };
 
     return (
         <form onSubmit={handleSubmit} className="form-container">
             <h1>{name}</h1>
+            {error && <div className="error-message">{error}</div>}
             <input
                 className="form-input"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Username"
+                required
             />
             <input
                 className="form-input"
@@ -76,12 +101,13 @@ function Form({ route, method }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
+                required
             />
             {loading && <LoadingIndicator />}
-            <button className="form-button" type="submit">
+            <button className="form-button" type="submit" disabled={loading}>
                 {name}
             </button>
-            <button className="form-button" type="button" onClick={handleGoogleLogin}>
+            <button className="form-button" type="button" onClick={handleGoogleLogin} disabled={loading}>
                 {name} with Google
             </button>
         </form>
