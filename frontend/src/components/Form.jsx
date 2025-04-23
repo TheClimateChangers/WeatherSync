@@ -5,11 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
 import LoadingIndicator from "./LoadingIndicator";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "../../firebase";
+import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
 import { AuthContext } from './AuthContext';
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 
 // Firebase configuration
 const firebaseConfig = {
