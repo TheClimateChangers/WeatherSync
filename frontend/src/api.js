@@ -89,26 +89,8 @@ export const inviteUserToTrip = async (tripId, userId) => {
 };
 
 export const getProfile = async () => {
-    try {
-        // Get the current token to ensure it's included in the request
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        
-        // Use the 'me' action endpoint to get the current user's profile
-        const response = await api.get('/api/profiles/me/', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching profile:', error);
-        // Log additional details about the error
-        if (error.response) {
-            console.error('Response status:', error.response.status);
-            console.error('Response data:', error.response.data);
-        }
-        throw error;
-    }
+    const response = await api.get('/api/profiles/');
+    return response.data;
 };
 
 export const followUser = async (profileId) => {
