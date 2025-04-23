@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { useState } from "react";
-import api from "../api";
+import { login as apiLogin, register as apiRegister } from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
@@ -23,16 +23,15 @@ function Form({ route, method }) {
         e.preventDefault();
 
         try {
-            const res = await api.post(route, { username, password });
             if (method === "login") {
-                const accessToken = res.data.access;
-                
-                localStorage.setItem(ACCESS_TOKEN, res.data.access);
-                localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-                console.log('Token stored', res.data.access); //HERE
-                login(accessToken);
+                const data = await apiLogin({ username, password });
+                localStorage.setItem(ACCESS_TOKEN, data.access);
+                localStorage.setItem(REFRESH_TOKEN, data.refresh);
+                console.log('Token stored', data.access);
+                login(data.access);
                 navigate("/");
             } else {
+                await apiRegister({ username, password });
                 navigate("/login");
             }
         } catch (error) {
