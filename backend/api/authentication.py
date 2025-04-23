@@ -15,13 +15,22 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
         # Get the auth header
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         
+        # Debug logging
+        logger.info(f"Authenticating request to {request.path} with auth header: {auth_header[:10]}...")
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Query params: {request.GET}")
+        
         if not auth_header.startswith('Bearer '):
+            logger.warning(f"Auth header doesn't start with 'Bearer': {auth_header[:20]}")
             return None
             
         token = auth_header.split(' ')[1]
         
         if not token:
+            logger.warning("No token in auth header")
             return None
+            
+        logger.info(f"Token received: {token[:20]}...")
         
         # First try Django's JWT token
         try:
@@ -33,6 +42,8 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                 # Validate the token
                 validated_token = AccessToken(token)
                 user_id = validated_token.get('user_id')
+                
+                logger.info(f"JWT token decoded, user_id: {user_id}")
                 
                 if not user_id:
                     logger.warning("JWT token does not contain user_id")
@@ -53,12 +64,14 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                 
         except ImportError:
             # If simplejwt is not installed, continue to Firebase authentication
+            logger.warning("simplejwt not installed")
             pass
         
         # Try Firebase token
         try:
             # Basic token validation - Firebase tokens have three segments separated by dots
             if token.count('.') != 2:
+                logger.warning(f"Token doesn't have 3 segments: {token[:20]}...")
                 return None
                 
             # Decode the token payload (middle segment)
@@ -74,13 +87,16 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                 
             try:
                 decoded_payload = json.loads(base64.b64decode(payload).decode('utf-8'))
+                logger.info(f"Decoded token payload: {decoded_payload}")
                 
                 # Check if it has characteristics of a Firebase token
                 if not ('iss' in decoded_payload and decoded_payload['iss'].endswith('securetoken.google.com')):
+                    logger.warning(f"Not a Firebase token: {decoded_payload.get('iss', 'no issuer')}")
                     return None
                     
                 # Extract Firebase UID
                 firebase_uid = decoded_payload.get('user_id') or decoded_payload.get('sub') or decoded_payload.get('uid')
+                logger.info(f"Firebase UID from token: {firebase_uid}")
                 
                 if not firebase_uid:
                     logger.warning("Firebase token does not contain user ID")
@@ -88,6 +104,8 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                 
                 # Check if we have a Django user ID in query parameters
                 django_user_id = request.GET.get('django_user_id')
+                logger.info(f"Django user ID from query params: {django_user_id}")
+                
                 if django_user_id:
                     logger.info(f"Found Django user ID in query parameters: {django_user_id}")
                     try:
@@ -104,17 +122,20 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                     logger.info(f"Authenticated with Firebase for user {user.username}")
                     return (user, token)
                 except User.DoesNotExist:
+                    logger.warning(f"User with Firebase UID {firebase_uid} as username not found")
                     # Try to find by email
                     email = decoded_payload.get('email')
+                    logger.info(f"Trying to find user by email: {email}")
                     if email:
                         try:
                             user = User.objects.get(email=email)
                             logger.info(f"Authenticated with Firebase email for user {user.username}")
                             return (user, token)
                         except User.DoesNotExist:
+                            logger.warning(f"User with email {email} not found")
                             pass
                     
-                    logger.warning(f"User with Firebase UID {firebase_uid} not found")
+                    logger.warning(f"User with Firebase UID {firebase_uid} not found through any method")
                     return None
                     
             except Exception as e:
@@ -125,6 +146,7 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
             logger.error(f"Error in Firebase authentication: {str(e)}")
             return None
             
+        logger.warning("Authentication failed through all methods")
         return None
         
     def authenticate_header(self, request):

@@ -11,26 +11,10 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             
-            // Add debug logging for /api/profiles/me/ endpoint
+            // Simple debug logging for profile request
             if (config.url && config.url.includes('/api/profiles/me/')) {
-                console.log('Authentication token for profile request:', token);
-                try {
-                    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-                    console.log('Token payload:', tokenPayload);
-                    
-                    // Check if token is Firebase or Django
-                    const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
-                    console.log('Token type:', isGoogleAuth ? 'Google Firebase' : 'Django JWT');
-                    console.log('User ID in token:', tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid);
-                    
-                    // Log if Django user ID is present (but don't add it as a header anymore)
-                    if (isGoogleAuth) {
-                        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
-                        console.log('Django User ID in localStorage:', djangoUserId);
-                    }
-                } catch (e) {
-                    console.error('Error parsing token:', e);
-                }
+                console.log('Making authenticated request to profile endpoint');
+                console.log('Authorization header set with token:', token.substring(0, 15) + '...');
             }
         }
         return config
@@ -118,64 +102,18 @@ export const getProfile = async () => {
             throw new Error('No authentication token found');
         }
         
-        // Check if this is a Google token and we have a Django user ID
-        try {
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
-            
-            if (isGoogleAuth && !localStorage.getItem('DJANGO_USER_ID')) {
-                console.warn('Google token detected but no Django user ID found. Attempting to retrieve it...');
-                const userId = tokenPayload.sub || tokenPayload.uid;
-                const email = tokenPayload.email || '';
-                
-                // Try to get the Django user ID from the server
-                const response = await axios.post(
-                    `${import.meta.env.VITE_URL_API}/api/auth/google-user/`,
-                    { uid: userId, email: email }
-                );
-                
-                if (response.data && response.data.user_id) {
-                    localStorage.setItem('DJANGO_USER_ID', response.data.user_id);
-                    console.log('Retrieved and stored Django user ID before profile request:', response.data.user_id);
-                }
-            }
-        } catch (error) {
-            console.error('Error checking token type:', error);
-        }
+        console.log('Token from localStorage:', token.substring(0, 20) + '...');
         
-        // For Google auth tokens, add the Django user ID as a URL query parameter instead of a header
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
-        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
-        
-        // Use URL parameter for Django user ID instead of a custom header to avoid CORS issues
-        let url = '/api/profiles/me/';
-        if (isGoogleAuth && djangoUserId) {
-            url = `/api/profiles/me/?django_user_id=${djangoUserId}`;
-            console.log('Adding Django user ID as URL parameter:', url);
-        }
-        
-        // Now make the profile request with the updated URL
-        const response = await api.get(url);
+        // Make the profile request - no need for query parameters since we have a Django JWT token
+        const response = await api.get('/api/profiles/me/');
         return response.data;
     } catch (error) {
         console.error('Error fetching profile:', error);
         
-        // Check for 401 errors that might be due to missing Django user ID
+        // Check for 401 errors that might be due to expired token
         if (error.response && error.response.status === 401) {
-            const token = localStorage.getItem(ACCESS_TOKEN);
-            if (token) {
-                try {
-                    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-                    const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
-                    
-                    if (isGoogleAuth) {
-                        console.error('401 error with Google token - possible mapping issue');
-                    }
-                } catch (e) {
-                    console.error('Error parsing token during error handling:', e);
-                }
-            }
+            console.error('Error response data:', error.response.data);
+            console.error('Unauthorized error - token may have expired');
         }
         
         throw error;
@@ -218,6 +156,22 @@ export const createOrGetUserFromGoogle = async (userData) => {
         return response.data;
     } catch (error) {
         console.error('Error creating/getting user from Google auth:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        }
+        throw error;
+    }
+};
+
+export const exchangeFirebaseToken = async (token) => {
+    try {
+        console.log('Exchanging Firebase token for Django JWT token');
+        const response = await axios.post(`${API_URL}/api/auth/exchange-firebase-token/`, {
+            token: token
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error exchanging Firebase token:', error);
         if (error.response && error.response.data) {
             console.error('Error details:', error.response.data);
         }

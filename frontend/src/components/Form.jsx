@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { useState } from "react";
-import { login as apiLogin, register as apiRegister, createOrGetUserFromGoogle } from "../api";
+import { login as apiLogin, register as apiRegister, exchangeFirebaseToken } from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
@@ -84,36 +84,34 @@ function Form({ route, method }) {
             // Authenticate with Firebase
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-            const accessToken = await user.getIdToken();
+            const firebaseToken = await user.getIdToken();
             
             console.log("Google user:", user);
             
-            // Create or get a Django user for this Google user
-            const userData = {
-                uid: user.uid,
-                name: user.displayName,
-                email: user.email
-            };
+            // Exchange Firebase token for a Django JWT token
+            const tokenData = await exchangeFirebaseToken(firebaseToken);
+            console.log("Token exchange response:", tokenData);
             
-            // Send the Google user data to your Django backend
-            const djangoUserResponse = await createOrGetUserFromGoogle(userData);
-            console.log("Django user created/found:", djangoUserResponse);
-            
-            if (!djangoUserResponse || !djangoUserResponse.user_id) {
-                throw new Error("Failed to create or retrieve Django user ID");
+            if (!tokenData || !tokenData.access) {
+                throw new Error("Failed to get Django JWT token");
             }
             
-            // Store the Firebase token for authentication
-            localStorage.setItem(ACCESS_TOKEN, accessToken);
+            // Store the Django JWT token for authentication
+            localStorage.setItem(ACCESS_TOKEN, tokenData.access);
             
-            // Store the Django user ID for creating trips
-            localStorage.setItem('DJANGO_USER_ID', djangoUserResponse.user_id);
+            // Store the refresh token if present
+            if (tokenData.refresh) {
+                localStorage.setItem(REFRESH_TOKEN, tokenData.refresh);
+            }
+            
+            // Store the Django user ID
+            localStorage.setItem('DJANGO_USER_ID', tokenData.user_id);
             
             // Log the values for debugging
-            console.log("Stored ACCESS_TOKEN:", accessToken);
-            console.log("Stored DJANGO_USER_ID:", djangoUserResponse.user_id);
+            console.log("Stored ACCESS_TOKEN:", tokenData.access.substring(0, 20) + '...');
+            console.log("Stored DJANGO_USER_ID:", tokenData.user_id);
             
-            login(accessToken);
+            login(tokenData.access);
             navigate("/");
         } catch (error) {
             console.error("Google login error:", error);
