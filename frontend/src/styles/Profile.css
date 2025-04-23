@@ -1,47 +1,71 @@
 .profile-container {
+  padding: 2rem;
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 1rem;
-  font-family: 'Inter', sans-serif;
+  margin: 0 auto;
 }
 
 .profile-header {
   display: flex;
   align-items: center;
-  gap: 2rem;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .profile-picture {
-  width: 150px;
-  height: 150px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #f3f4f6;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-info {
-  flex: 1;
+  margin-left: 2rem;
 }
 
 .profile-info h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  color: #333;
 }
 
-.stats {
+.profile-stats {
   display: flex;
   gap: 1.5rem;
-  margin: 1rem 0;
-  color: #4b5563;
 }
 
-.stats span {
+.profile-stats span {
   font-size: 0.9rem;
+  color: #666;
+}
+
+.profile-content {
+  margin-top: 2rem;
+}
+
+.profile-content h2 {
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  color: #444;
+}
+
+.no-trips-message {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+/* Error display */
+.error {
+  color: #d9534f;
+  background-color: #f8d7da;
+  padding: 1rem;
+  border-radius: 4px;
+  text-align: center;
 }
 
 .follow-button {
@@ -65,13 +89,6 @@
 
 .follow-button.following:hover {
   background-color: #4b5563;
-}
-
-.profile-content {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .details-section h2 {
