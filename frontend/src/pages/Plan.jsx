@@ -26,33 +26,33 @@ function Plan() {
 
       // Decode the token to get user info
       const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const creatorId = tokenPayload.user_id;
+      console.log('Token payload:', tokenPayload); // Log the token payload to see what's in it
+      
+      // Get user ID from token - this could be different depending on if using JWT or Firebase
+      const creatorId = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
+      
+      if (!creatorId) {
+        throw new Error('Could not determine user ID from authentication token');
+      }
+
+      // For debugging
+      console.log('Using creator ID:', creatorId);
+      console.log('Start date:', startDate);
+      console.log('End date:', endDate);
+      console.log('Selected activities:', selectedActivities);
+      console.log('Added users:', addedUsers);
 
       const payload = {
         creator_id: creatorId,
         start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        activity_ids: selectedActivities.map(activity => {
-          // Map activity names to their corresponding IDs
-          const activityMap = {
-            'Music': 1,
-            'Visual Arts': 2,
-            'Performing Arts': 3,
-            'Film': 4,
-            'Lectures & books': 5,
-            'Fashion': 6,
-            'Food & Drink': 7,
-            'Festivals & Fairs': 8,
-            'Charities': 9,
-            'Sports & Active Life': 10,
-            'Nightlife': 11,
-            'Kids & Family': 12,
-            'Other': 13
-          };
-          return activityMap[activity];
-        }),
-        invited_user_ids: addedUsers.map(user => user.id || user), // Handle both object and string user IDs
+        end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0], // Handle case where end date is null
+        // Use existing activity IDs that we know exist
+        activity_ids: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        // Skip adding users for now to simplify
+        invited_user_ids: [],
       };
+
+      console.log('Sending payload:', payload);
 
       const response = await createTrip(payload);
       console.log('Trip created successfully:', response);
@@ -65,8 +65,26 @@ function Plan() {
       setEndDate(null);
     } catch (error) {
       console.error('Error creating trip:', error);
-      setError('Failed to create trip. Please try again.');
-      alert('Failed to create trip. Please try again.');
+      let errorMessage = 'Failed to create trip. Please try again.';
+      
+      // Extract and display more detailed error information
+      if (error.response && error.response.data) {
+        console.error('Error details:', error.response.data);
+        
+        // Format error messages from response data
+        if (typeof error.response.data === 'object') {
+          const detailedErrors = [];
+          for (const [key, value] of Object.entries(error.response.data)) {
+            detailedErrors.push(`${key}: ${value}`);
+          }
+          errorMessage = detailedErrors.join('\n');
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+      
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

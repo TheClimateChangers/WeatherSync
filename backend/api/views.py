@@ -13,6 +13,7 @@ from django.utils import timezone
 import os
 from django.db import models
 from rest_framework.decorators import action
+from rest_framework import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +185,51 @@ class TripViewSet(viewsets.ModelViewSet):
         return Trip.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save()
+        try:
+            # Log the data received
+            logger.info(f"Creating trip with data: {self.request.data}")
+            
+            # Check if creator_id exists
+            creator_id = self.request.data.get('creator_id')
+            if not creator_id:
+                logger.error("Missing creator_id in request data")
+                raise serializers.ValidationError({"creator_id": "This field is required."})
+            
+            # Check if the user exists
+            try:
+                user = User.objects.get(id=creator_id)
+                logger.info(f"Found user: {user.username} (ID: {user.id})")
+            except User.DoesNotExist:
+                logger.error(f"User with ID {creator_id} does not exist")
+                raise serializers.ValidationError({"creator_id": f"User with ID {creator_id} does not exist."})
+            
+            # Validate activity_ids
+            activity_ids = self.request.data.get('activity_ids', [])
+            if activity_ids:
+                for activity_id in activity_ids:
+                    try:
+                        YelpEvent.objects.get(id=activity_id)
+                    except YelpEvent.DoesNotExist:
+                        logger.error(f"Activity with ID {activity_id} does not exist")
+                        raise serializers.ValidationError({"activity_ids": f"Activity with ID {activity_id} does not exist."})
+            
+            # Validate invited_user_ids
+            invited_user_ids = self.request.data.get('invited_user_ids', [])
+            if invited_user_ids:
+                for user_id in invited_user_ids:
+                    try:
+                        User.objects.get(id=user_id)
+                    except User.DoesNotExist:
+                        logger.error(f"User with ID {user_id} does not exist")
+                        raise serializers.ValidationError({"invited_user_ids": f"User with ID {user_id} does not exist."})
+            
+            # Save the trip
+            trip = serializer.save()
+            logger.info(f"Trip created successfully: {trip}")
+            return trip
+        except Exception as e:
+            logger.error(f"Error creating trip: {str(e)}")
+            raise
 
     @action(detail=True, methods=['post'])
     def add_activity(self, request, pk=None):
