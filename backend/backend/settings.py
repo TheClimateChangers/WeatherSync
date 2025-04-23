@@ -161,6 +161,15 @@ OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Add custom headers to allow in CORS requests
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-django-user-id",
+)
+
 # Import local settings
 try:
     from .local_settings import *

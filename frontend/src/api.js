@@ -23,17 +23,10 @@ api.interceptors.request.use(
                     console.log('Token type:', isGoogleAuth ? 'Google Firebase' : 'Django JWT');
                     console.log('User ID in token:', tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid);
                     
-                    // If this is a Google token, include the Django user ID in a custom header
+                    // Log if Django user ID is present (but don't add it as a header anymore)
                     if (isGoogleAuth) {
                         const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
                         console.log('Django User ID in localStorage:', djangoUserId);
-                        if (djangoUserId) {
-                            // Add a custom header with the Django user ID
-                            config.headers['X-Django-User-ID'] = djangoUserId;
-                            console.log('Added X-Django-User-ID header:', djangoUserId);
-                        } else {
-                            console.warn('No Django user ID found in localStorage for Google user');
-                        }
                     }
                 } catch (e) {
                     console.error('Error parsing token:', e);
@@ -150,8 +143,20 @@ export const getProfile = async () => {
             console.error('Error checking token type:', error);
         }
         
-        // Now make the profile request
-        const response = await api.get('/api/profiles/me/');
+        // For Google auth tokens, add the Django user ID as a URL query parameter instead of a header
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
+        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
+        
+        // Use URL parameter for Django user ID instead of a custom header to avoid CORS issues
+        let url = '/api/profiles/me/';
+        if (isGoogleAuth && djangoUserId) {
+            url = `/api/profiles/me/?django_user_id=${djangoUserId}`;
+            console.log('Adding Django user ID as URL parameter:', url);
+        }
+        
+        // Now make the profile request with the updated URL
+        const response = await api.get(url);
         return response.data;
     } catch (error) {
         console.error('Error fetching profile:', error);
