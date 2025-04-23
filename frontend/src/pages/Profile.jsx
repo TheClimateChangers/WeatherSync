@@ -21,12 +21,34 @@ function Profile() {
 
     const fetchProfile = async () => {
         try {
+            setLoading(true);
             const data = await getProfile();
-            setProfile(data[0]); // Get the first (and only) profile from the list
+            console.log('Profile data:', data);
+            
+            // The response might be a single object or an array with one object
+            if (Array.isArray(data)) {
+                setProfile(data[0]); // Handle array response (list endpoint)
+            } else {
+                setProfile(data); // Handle single object response (detail endpoint)
+            }
+            
             setError(null);
         } catch (err) {
-            setError('Failed to load profile');
             console.error('Error fetching profile:', err);
+            
+            // Show more detailed error message
+            let errorMessage = 'Failed to load profile';
+            if (err.response) {
+                // Add status code
+                errorMessage += ` (${err.response.status})`;
+                
+                // Add error message from backend if available
+                if (err.response.data && err.response.data.error) {
+                    errorMessage += `: ${err.response.data.error}`;
+                }
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

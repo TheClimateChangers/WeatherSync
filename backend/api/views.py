@@ -355,20 +355,41 @@ class TripViewSet(viewsets.ModelViewSet):
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        if self.action == 'list':
-            return UserProfile.objects.filter(user=self.request.user)
+        user = self.request.user
+        
+        # Handle the 'me' endpoint
+        if self.kwargs.get('pk') == 'me' and user.is_authenticated:
+            # For /profiles/me/ endpoint, return only current user's profile
+            return UserProfile.objects.filter(user=user)
+        
+        # For authenticated users viewing their profile list
+        if self.action == 'list' and user.is_authenticated:
+            return UserProfile.objects.filter(user=user)
+            
+        # For regular list endpoints, return all profiles
         return UserProfile.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
-        if str(kwargs.get('pk')) != str(request.user.id):
+        try:
+            # Handle the 'me' endpoint for authenticated users
+            if kwargs.get('pk') == 'me':
+                if not request.user.is_authenticated:
+                    return Response(
+                        {"error": "Authentication required to access your profile"},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+                kwargs['pk'] = request.user.pk
+                
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving profile: {str(e)}")
             return Response(
-                {"error": "You can only access your own profile"},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": f"Error retrieving profile: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        return super().retrieve(request, *args, **kwargs)
 
     @action(detail=True, methods=['post'])
     def follow(self, request, pk=None):

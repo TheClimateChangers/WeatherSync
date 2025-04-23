@@ -89,8 +89,14 @@ export const inviteUserToTrip = async (tripId, userId) => {
 };
 
 export const getProfile = async () => {
-    const response = await api.get('/api/profiles/');
-    return response.data;
+    try {
+        // Use the 'me' endpoint to get the current user's profile
+        const response = await api.get('/api/profiles/me/');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+    }
 };
 
 export const followUser = async (profileId) => {
