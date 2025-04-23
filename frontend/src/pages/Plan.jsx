@@ -14,10 +14,23 @@ function Plan() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  // Step 0: Location
+  const [location, setLocation] = useState("");
+  const handleLocationChange = (newLocation) => {
+    setLocation(newLocation);
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
+
+    // Validate location
+    if (!location) {
+      setError("Please select a location for your trip");
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       // Try to get the Django user ID first (created during Google login)
@@ -71,13 +84,18 @@ function Plan() {
       }
       
       console.log('Using Django creator ID:', numericCreatorId);
+      console.log('Location:', location);
       console.log('Start date:', startDate);
       console.log('End date:', endDate);
       console.log('Selected activities:', selectedActivities);
       console.log('Added users:', addedUsers);
 
+      // Extract city name from location (if it contains a comma)
+      const cityName = location.includes(',') ? location.split(',')[0] : location;
+
       const payload = {
         creator_id: numericCreatorId,
+        location: cityName,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0], // Handle case where end date is null
         // Use existing activity IDs that we know exist
@@ -97,6 +115,8 @@ function Plan() {
       setAddedUsers([]);
       setStartDate(new Date());
       setEndDate(null);
+      setLocation("");
+      navigate('/trips');
     } catch (error) {
       console.error('Error creating trip:', error);
       let errorMessage = error.message || 'Failed to create trip. Please try again.';
@@ -222,7 +242,12 @@ function Plan() {
       <h2 style={{ marginBottom: '30px' }}>Plan Your Trip</h2>
 
       {/* Step 0: Location */}
-      <LocationSearch />
+      <div className="plan-section">
+        <h3>Where are you going?</h3>
+        <LocationSearch onLocationChange={handleLocationChange} />
+        {location && <p className="selected-location">Selected: {location}</p>}
+      </div>
+      
       {/* Step 1: Dates */}
       <DateCalendar
         startDate={startDate}
@@ -245,12 +270,14 @@ function Plan() {
         addedUsers={addedUsers}
         isReadyToProceed={isReadyToProceed}
       />
+      {/* Error message */}
+      {error && <div className="error-message">{error}</div>}
       {/* Submit */}
       <div style={{ marginTop: '40px' }}>
         <ContinueButton
           onClick={handleSubmit}
           label="Finish Planning"
-          disabled={!isValidRange || !isReadyToProceed}
+          disabled={!location || !isValidRange || !isReadyToProceed || isSubmitting}
         />
       </div>
     </div>

@@ -2,11 +2,21 @@ import React, { useState } from 'react';
 import PlacesAutocomplete from 'react-places-autocomplete';
 import '../styles/Home.css';
 
-function LocationSearch() {
+function LocationSearch({ onLocationChange }) {
   const [location, setLocation] = useState('');
 
   const handleSelect = address => {
     setLocation(address);
+    if (onLocationChange) {
+      onLocationChange(address);
+    }
+  };
+
+  const handleChange = address => {
+    setLocation(address);
+    if (onLocationChange) {
+      onLocationChange(address);
+    }
   };
 
   return (
@@ -14,7 +24,7 @@ function LocationSearch() {
       <div className="pb-5">
             <PlacesAutocomplete
               value={location}
-              onChange={setLocation}
+              onChange={handleChange}
               onSelect={handleSelect}
               searchOptions={{ types: ['(cities)'] }}
             >

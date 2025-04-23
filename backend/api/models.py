@@ -45,6 +45,7 @@ class YelpEvent(models.Model):
 
 class Trip(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_trips')
+    location = models.CharField(max_length=255, default="Unknown", help_text="City or destination name for the trip")
     start_date = models.DateField()
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,7 +58,7 @@ class Trip(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Trip by {self.creator.username} ({self.start_date} to {self.end_date})"
+        return f"Trip to {self.location} by {self.creator.username} ({self.start_date} to {self.end_date})"
 
     def clean(self):
         from django.core.exceptions import ValidationError

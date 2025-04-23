@@ -63,7 +63,7 @@ class TripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
-            'id', 'creator', 'creator_id', 'start_date', 'end_date',
+            'id', 'creator', 'creator_id', 'location', 'start_date', 'end_date',
             'created_at', 'updated_at', 'activities', 'activity_ids',
             'invited_users', 'invited_user_ids', 'is_active'
         ]

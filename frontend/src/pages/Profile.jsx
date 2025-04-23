@@ -152,7 +152,7 @@ function Profile() {
                     <div className="trips-list">
                         {trips.map(trip => (
                             <div key={trip.id} className="trip-card">
-                                <h3>Trip {trip.id}</h3>
+                                <h3>Trip to {trip.location || "Unknown"}</h3>
                                 <p>Start: {new Date(trip.start_date).toLocaleDateString()}</p>
                                 <p>End: {new Date(trip.end_date).toLocaleDateString()}</p>
                                 <p>Activities: {trip.activities ? trip.activities.length : 0}</p>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getTrips } from '../api.js';
+import { useNavigate } from 'react-router-dom';
 
 function TripsList() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -30,9 +32,10 @@ function TripsList() {
     <div className="trips-container">
       <div className="trips-grid">
         {trips.map((trip) => (
-          <div className="trip-card" key={trip.id}>
+          <div className="trip-card" key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)}>
             <div className="trip-card-content">
-              <h3>{trip.creator.username}'s Trip</h3>
+              <h3>Trip to {trip.location || "Unknown"}</h3>
+              <p className="trip-creator">By: {trip.creator.username}</p>
               <p className="trip-dates">
                 {new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}
               </p>
