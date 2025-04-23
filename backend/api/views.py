@@ -12,8 +12,9 @@ from rest_framework.response import Response
 from django.utils import timezone
 import os
 from django.db import models
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework import serializers
+from rest_framework import permissions
 
 logger = logging.getLogger(__name__)
 
@@ -397,3 +398,68 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         profiles = UserProfile.objects.filter(user__in=followers)
         serializer = self.get_serializer(profiles, many=True)
         return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_or_get_user(request):
+    """
+    Creates a user based on Google authentication or returns existing user
+    """
+    try:
+        # Extract data from the request
+        uid = request.data.get('uid')
+        name = request.data.get('name', '')
+        email = request.data.get('email', '')
+        
+        if not uid:
+            return Response({"error": "UID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Try to find an existing user with this UID as username
+        try:
+            # Check if user exists with UID as username
+            user = User.objects.get(username=uid)
+            logger.info(f"Found existing user with UID {uid}")
+            return Response({
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "message": "User found"
+            })
+        except User.DoesNotExist:
+            # Create a new user
+            username = uid
+            # Create username based on name if provided, otherwise use UID
+            if name:
+                username = name.lower().replace(' ', '_')
+                # Ensure username is unique
+                base_username = username
+                count = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}_{count}"
+                    count += 1
+            
+            # Create the user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                # Set a random password since they'll use Google to sign in
+                password=User.objects.make_random_password()
+            )
+            
+            # Store the Google UID in a custom field or profile
+            profile = user.profile
+            # You can add this field to UserProfile model if you want
+            # profile.google_uid = uid
+            profile.save()
+            
+            logger.info(f"Created new user with UID {uid} and username {username}")
+            return Response({
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "message": "User created"
+            }, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        logger.error(f"Error in create_or_get_user: {str(e)}")
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

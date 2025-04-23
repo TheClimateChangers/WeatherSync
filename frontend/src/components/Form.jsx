@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { useState } from "react";
-import { login as apiLogin, register as apiRegister } from "../api";
+import { login as apiLogin, register as apiRegister, createOrGetUserFromGoogle } from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
@@ -65,21 +65,41 @@ function Form({ route, method }) {
 
     const handleGoogleLogin = async () => {
         setError("");
+        setLoading(true);
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' })
         try {
+            // Authenticate with Firebase
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
             const accessToken = await user.getIdToken();
-            // Handle the authenticated user data
-            console.log(user);
-            // Optionally send user data to your server
-            localStorage.setItem(ACCESS_TOKEN, user.accessToken);
+            
+            console.log("Google user:", user);
+            
+            // Create or get a Django user for this Google user
+            const userData = {
+                uid: user.uid,
+                name: user.displayName,
+                email: user.email
+            };
+            
+            // Send the Google user data to your Django backend
+            const djangoUserResponse = await createOrGetUserFromGoogle(userData);
+            console.log("Django user created/found:", djangoUserResponse);
+            
+            // Store the Firebase token for authentication
+            localStorage.setItem(ACCESS_TOKEN, accessToken);
+            
+            // Store the Django user ID for creating trips
+            localStorage.setItem('DJANGO_USER_ID', djangoUserResponse.user_id);
+            
             login(accessToken);
             navigate("/");
         } catch (error) {
-            console.error(error);
-            setError("Google login failed: " + error.message);
+            console.error("Google login error:", error);
+            setError("Google login failed: " + (error.message || "Unknown error"));
+        } finally {
+            setLoading(false);
         }
     };
 

@@ -18,33 +18,41 @@ function Plan() {
     setError(null);
 
     try {
-      // Get the current user's ID from the token
-      const token = localStorage.getItem(ACCESS_TOKEN);
-      if (!token) {
-        throw new Error('User not authenticated');
-      }
-
-      // Decode the token to get user info
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Token payload:', tokenPayload); // Log the token payload to see what's in it
+      // Try to get the Django user ID first (created during Google login)
+      let creatorId = localStorage.getItem('DJANGO_USER_ID');
       
-      // Get user ID from token - this could be different depending on if using JWT or Firebase
-      const creatorId = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
-      
+      // If not found, try to get it from the JWT token as a fallback
       if (!creatorId) {
-        throw new Error('Could not determine user ID from authentication token');
-      }
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) {
+          throw new Error('User not authenticated');
+        }
 
-      // For debugging
-      console.log('Using creator ID:', creatorId);
+        // Decode the token to get user info
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Token payload:', tokenPayload);
+        
+        // Get user ID from token - this could be different depending on if using JWT or Firebase
+        const googleUid = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
+        
+        if (!googleUid) {
+          throw new Error('Could not determine user ID from authentication token');
+        }
+
+        // For debugging
+        console.log('Using Google UID:', googleUid);
+        alert('You are authenticated with Google, but we could not find your Django user ID. Please try logging out and logging in again with Google.');
+        setIsSubmitting(false);
+        return;
+      }
       
-      // Convert creator_id to integer if it's a string (JWT tokens often store IDs as strings)
+      // Convert creator_id to integer if it's a string
       const numericCreatorId = parseInt(creatorId, 10);
       if (isNaN(numericCreatorId)) {
         throw new Error('Invalid user ID format: must be a numeric value');
       }
       
-      console.log('Numeric creator ID:', numericCreatorId);
+      console.log('Using Django creator ID:', numericCreatorId);
       console.log('Start date:', startDate);
       console.log('End date:', endDate);
       console.log('Selected activities:', selectedActivities);

@@ -123,4 +123,17 @@ export const register = async (userData) => {
     }
 };
 
+export const createOrGetUserFromGoogle = async (userData) => {
+    try {
+        const response = await axios.post(`${API_URL}/api/auth/google-user/`, userData);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating/getting user from Google auth:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        }
+        throw error;
+    }
+};
+
 export default api
