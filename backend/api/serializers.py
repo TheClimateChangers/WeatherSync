@@ -49,13 +49,15 @@ class TripSerializer(serializers.ModelSerializer):
         many=True,
         queryset=User.objects.all(),
         source='invited_users',
-        write_only=True
+        write_only=True,
+        required=False
     )
     activity_ids = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=YelpEvent.objects.all(),
         source='activities',
-        write_only=True
+        write_only=True,
+        required=False
     )
 
     class Meta:
@@ -68,7 +70,7 @@ class TripSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def validate(self, data):
-        if data['end_date'] < data['start_date']:
+        if data.get('end_date') and data['end_date'] < data['start_date']:
             raise serializers.ValidationError("End date cannot be before start date")
         return data
 

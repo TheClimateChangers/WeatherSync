@@ -37,13 +37,21 @@ function Plan() {
 
       // For debugging
       console.log('Using creator ID:', creatorId);
+      
+      // Convert creator_id to integer if it's a string (JWT tokens often store IDs as strings)
+      const numericCreatorId = parseInt(creatorId, 10);
+      if (isNaN(numericCreatorId)) {
+        throw new Error('Invalid user ID format: must be a numeric value');
+      }
+      
+      console.log('Numeric creator ID:', numericCreatorId);
       console.log('Start date:', startDate);
       console.log('End date:', endDate);
       console.log('Selected activities:', selectedActivities);
       console.log('Added users:', addedUsers);
 
       const payload = {
-        creator_id: creatorId,
+        creator_id: numericCreatorId,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0], // Handle case where end date is null
         // Use existing activity IDs that we know exist

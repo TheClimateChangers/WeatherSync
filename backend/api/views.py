@@ -195,10 +195,17 @@ class TripViewSet(viewsets.ModelViewSet):
                 logger.error("Missing creator_id in request data")
                 raise serializers.ValidationError({"creator_id": "This field is required."})
             
-            # Check if the user exists
+            # Ensure creator_id is an integer
             try:
+                if isinstance(creator_id, str) and creator_id.isdigit():
+                    creator_id = int(creator_id)
+                
+                # Check if the user exists
                 user = User.objects.get(id=creator_id)
                 logger.info(f"Found user: {user.username} (ID: {user.id})")
+            except (ValueError, TypeError):
+                logger.error(f"Invalid creator_id format: {creator_id}")
+                raise serializers.ValidationError({"creator_id": "Invalid creator_id format. Must be an integer."})
             except User.DoesNotExist:
                 logger.error(f"User with ID {creator_id} does not exist")
                 raise serializers.ValidationError({"creator_id": f"User with ID {creator_id} does not exist."})
@@ -269,6 +276,79 @@ class TripViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['post'])
+    def create_with_string_ids(self, request):
+        """
+        Custom endpoint to create a trip with string IDs
+        """
+        try:
+            # Log the data received
+            logger.info(f"Creating trip with data: {request.data}")
+            
+            # Get and validate creator_id
+            creator_id = request.data.get('creator_id')
+            if not creator_id:
+                logger.error("Missing creator_id in request data")
+                return Response(
+                    {"creator_id": "This field is required."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Convert string ID to integer
+            try:
+                numeric_creator_id = int(creator_id)
+                user = User.objects.get(id=numeric_creator_id)
+                logger.info(f"Found user: {user.username} (ID: {user.id})")
+            except (ValueError, TypeError):
+                logger.error(f"Invalid creator_id format: {creator_id}")
+                return Response(
+                    {"creator_id": "Invalid format. Must be a numeric value."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except User.DoesNotExist:
+                logger.error(f"User with ID {numeric_creator_id} does not exist")
+                return Response(
+                    {"creator_id": f"User with ID {numeric_creator_id} does not exist."}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Prepare data for serializer
+            trip_data = request.data.copy()
+            trip_data['creator_id'] = numeric_creator_id
+            
+            # Convert activity_ids if present
+            activity_ids = request.data.get('activity_ids', [])
+            if activity_ids:
+                valid_activity_ids = []
+                for activity_id in activity_ids:
+                    try:
+                        numeric_activity_id = int(activity_id)
+                        # Verify the activity exists
+                        YelpEvent.objects.get(id=numeric_activity_id)
+                        valid_activity_ids.append(numeric_activity_id)
+                    except (ValueError, TypeError, YelpEvent.DoesNotExist):
+                        logger.warning(f"Invalid or non-existent activity ID: {activity_id}, skipping")
+                trip_data['activity_ids'] = valid_activity_ids
+            
+            # Validate with serializer
+            serializer = self.get_serializer(data=trip_data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Save trip
+            trip = serializer.save()
+            logger.info(f"Trip created successfully: {trip}")
+            
+            return Response(
+                self.get_serializer(trip).data, 
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            logger.error(f"Error in create_with_string_ids: {str(e)}")
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 class UserProfileViewSet(viewsets.ModelViewSet):
