@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, followUser } from '../api';
+import { getProfile, followUser, getTrips } from '../api';
 import { ACCESS_TOKEN } from '../constants';
 import '../styles/Profile.css';
 
@@ -9,6 +9,8 @@ function Profile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tokenType, setTokenType] = useState(null);
+    const [trips, setTrips] = useState([]);
+    const [tripsLoading, setTripsLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -42,6 +44,9 @@ function Profile() {
             setProfile(profileData);
             setError(null);
             console.log("Profile data loaded:", profileData);
+            
+            // After getting profile, fetch the user's trips
+            fetchUserTrips();
         } catch (err) {
             console.error('Error fetching profile:', err);
             let errorMessage = 'Failed to load profile';
@@ -61,6 +66,26 @@ function Profile() {
             setError(errorMessage);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchUserTrips = async () => {
+        setTripsLoading(true);
+        try {
+            const tripsData = await getTrips();
+            
+            // Filter trips created by the current user
+            const userDjangoId = localStorage.getItem('DJANGO_USER_ID');
+            const userTrips = tripsData.filter(trip => 
+                trip.creator && trip.creator.id.toString() === userDjangoId
+            );
+            
+            setTrips(userTrips);
+            console.log("User trips loaded:", userTrips);
+        } catch (err) {
+            console.error('Error fetching trips:', err);
+        } finally {
+            setTripsLoading(false);
         }
     };
 
@@ -91,16 +116,19 @@ function Profile() {
     if (!profile) return <div className="profile-container">Profile not found</div>;
 
     // Get data with fallbacks for any missing properties
-    const username = profile.user?.username || 'User';
+    const username = profile.username || 'User';
     const followersCount = profile.followers_count || 0;
     const followingCount = profile.following_count || 0;
     const tripsCount = profile.trips_count || 0;
+
+    // Default gray silhouette for profile picture
+    const defaultProfilePic = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23808080'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
 
     return (
         <div className="profile-container">
             <div className="profile-header">
                 <img 
-                    src={profile.profile_picture || 'https://via.placeholder.com/150'} 
+                    src={profile.profile_picture || defaultProfilePic} 
                     alt="Profile" 
                     className="profile-picture"
                 />
@@ -118,10 +146,30 @@ function Profile() {
             </div>
             <div className="profile-content">
                 <h2>My Trips</h2>
-                {/* Display trips here */}
-                <div className="no-trips-message">
-                    {tripsCount > 0 ? 'Your trips will appear here' : 'You haven\'t created any trips yet'}
-                </div>
+                {tripsLoading ? (
+                    <p>Loading trips...</p>
+                ) : trips.length > 0 ? (
+                    <div className="trips-list">
+                        {trips.map(trip => (
+                            <div key={trip.id} className="trip-card">
+                                <h3>Trip {trip.id}</h3>
+                                <p>Start: {new Date(trip.start_date).toLocaleDateString()}</p>
+                                <p>End: {new Date(trip.end_date).toLocaleDateString()}</p>
+                                <p>Activities: {trip.activities ? trip.activities.length : 0}</p>
+                                <button 
+                                    onClick={() => navigate(`/trips/${trip.id}`)}
+                                    className="view-trip-btn"
+                                >
+                                    View Details
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="no-trips-message">
+                        You haven't created any trips yet
+                    </div>
+                )}
             </div>
         </div>
     );
