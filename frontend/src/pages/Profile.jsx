@@ -61,6 +61,12 @@ function Profile() {
     if (error) return <div className="profile-container error">{error}</div>;
     if (!profile) return <div className="profile-container">Profile not found</div>;
 
+    // Get data with fallbacks for any missing properties
+    const username = profile.user?.username || 'User';
+    const followersCount = profile.followers_count || 0;
+    const followingCount = profile.following_count || 0;
+    const tripsCount = profile.trips_count || 0;
+
     return (
         <div className="profile-container">
             <div className="profile-header">
@@ -70,11 +76,11 @@ function Profile() {
                     className="profile-picture"
                 />
                 <div className="profile-info">
-                    <h1>{profile.user.username}</h1>
+                    <h1>{username}</h1>
                     <div className="profile-stats">
-                        <span>{profile.followers_count} Followers</span>
-                        <span>{profile.following_count} Following</span>
-                        <span>{profile.trips_count || 0} Trips</span>
+                        <span>{followersCount} Followers</span>
+                        <span>{followingCount} Following</span>
+                        <span>{tripsCount} Trips</span>
                     </div>
                 </div>
             </div>
@@ -82,7 +88,7 @@ function Profile() {
                 <h2>My Trips</h2>
                 {/* Display trips here */}
                 <div className="no-trips-message">
-                    {profile.trips_count ? 'Your trips will appear here' : 'You haven\'t created any trips yet'}
+                    {tripsCount > 0 ? 'Your trips will appear here' : 'You haven\'t created any trips yet'}
                 </div>
             </div>
         </div>

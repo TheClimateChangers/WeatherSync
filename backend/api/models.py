@@ -88,7 +88,7 @@ class UserProfile(models.Model):
 
     @property
     def trips_count(self):
-        return self.user.trips_created.count()
+        return self.user.created_trips.count()
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
