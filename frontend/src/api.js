@@ -11,10 +11,25 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             
-            // Simple debug logging for profile request
-            if (config.url && config.url.includes('/api/profiles/me/')) {
-                console.log('Making authenticated request to profile endpoint');
-                console.log('Authorization header set with token:', token.substring(0, 15) + '...');
+            // Log auth info for important endpoints
+            if (config.url && (config.url.includes('/api/profiles/') || config.url.includes('/api/trips/'))) {
+                console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
+                console.log(`Authorization: Bearer ${token.substring(0, 20)}...`);
+                
+                try {
+                    // Try to determine if this is a Google token
+                    const payload = token.split('.')[1];
+                    const tokenData = JSON.parse(atob(payload));
+                    const isGoogleToken = tokenData.iss && tokenData.iss.includes('securetoken.google.com');
+                    console.log(`Token type: ${isGoogleToken ? 'Google Firebase' : 'Django JWT'}`);
+                    
+                    if (isGoogleToken) {
+                        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
+                        console.log(`Django user ID in localStorage: ${djangoUserId || 'not found'}`);
+                    }
+                } catch (e) {
+                    console.error('Error parsing token:', e);
+                }
             }
         }
         return config
@@ -102,10 +117,28 @@ export const getProfile = async () => {
             throw new Error('No authentication token found');
         }
         
-        console.log('Token from localStorage:', token.substring(0, 20) + '...');
+        // Get Django user ID from localStorage
+        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
         
-        // Make the profile request - no need for query parameters since we have a Django JWT token
-        const response = await api.get('/api/profiles/me/');
+        // Determine if this is a Google token
+        let isGoogleToken = false;
+        try {
+            const payload = token.split('.')[1];
+            const tokenData = JSON.parse(atob(payload));
+            isGoogleToken = tokenData.iss && tokenData.iss.includes('securetoken.google.com');
+        } catch (e) {
+            console.error('Error parsing token:', e);
+        }
+        
+        // For Google tokens, add Django user ID as a query parameter
+        let url = '/api/profiles/me/';
+        if (isGoogleToken && djangoUserId) {
+            url = `/api/profiles/me/?django_user_id=${djangoUserId}`;
+            console.log('Using Django user ID in URL:', djangoUserId);
+        }
+        
+        // Make the profile request
+        const response = await api.get(url);
         return response.data;
     } catch (error) {
         console.error('Error fetching profile:', error);

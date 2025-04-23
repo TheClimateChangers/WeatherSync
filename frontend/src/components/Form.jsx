@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { useState } from "react";
-import { login as apiLogin, register as apiRegister, exchangeFirebaseToken } from "../api";
+import { login as apiLogin, register as apiRegister, createOrGetUserFromGoogle } from "../api";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
@@ -8,6 +8,22 @@ import LoadingIndicator from "./LoadingIndicator";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { AuthContext } from './AuthContext';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAQnYDLVEYEDjl0N5ZPqUbPJ3ZlSGG5t10",
+    authDomain: "tripsync-80368.firebaseapp.com",
+    projectId: "tripsync-80368",
+    storageBucket: "tripsync-80368.appspot.com",
+    messagingSenderId: "1051696018872",
+    appId: "1:1051696018872:web:74a8f981d08fadf8a1ed5c"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 function Form({ route, method }) {
     const [username, setUsername] = useState("");
@@ -48,27 +64,20 @@ function Form({ route, method }) {
                 await apiRegister({ username, password });
                 navigate("/login");
             }
-        } catch (error) {
-            console.error("Error:", error);
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                console.error("Response data:", error.response.data);
-                if (typeof error.response.data === 'object') {
-                    const errorMessages = [];
-                    for (const key in error.response.data) {
-                        errorMessages.push(`${key}: ${error.response.data[key]}`);
-                    }
-                    setError(errorMessages.join(', '));
+        } catch (err) {
+            console.error("Form submission error:", err);
+            if (err.response && err.response.data) {
+                if (err.response.data.username) {
+                    setError(err.response.data.username[0]);
+                } else if (err.response.data.password) {
+                    setError(err.response.data.password[0]);
+                } else if (err.response.data.detail) {
+                    setError(err.response.data.detail);
                 } else {
-                    setError(error.response.data || "An error occurred");
+                    setError("An error occurred. Please try again.");
                 }
-            } else if (error.request) {
-                // The request was made but no response was received
-                setError("No response from server. Please try again later.");
             } else {
-                // Something happened in setting up the request that triggered an Error
-                setError(error.message || "An unexpected error occurred");
+                setError("Network error. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -88,30 +97,32 @@ function Form({ route, method }) {
             
             console.log("Google user:", user);
             
-            // Exchange Firebase token for a Django JWT token
-            const tokenData = await exchangeFirebaseToken(firebaseToken);
-            console.log("Token exchange response:", tokenData);
+            // Create or get a Django user for this Google user
+            const userData = {
+                uid: user.uid,
+                name: user.displayName || '',
+                email: user.email || ''
+            };
             
-            if (!tokenData || !tokenData.access) {
-                throw new Error("Failed to get Django JWT token");
+            // Send the Google user data to your Django backend
+            const djangoUserResponse = await createOrGetUserFromGoogle(userData);
+            console.log("Django user created/found:", djangoUserResponse);
+            
+            if (!djangoUserResponse || !djangoUserResponse.user_id) {
+                throw new Error("Failed to create or retrieve Django user ID");
             }
             
-            // Store the Django JWT token for authentication
-            localStorage.setItem(ACCESS_TOKEN, tokenData.access);
+            // Store the Firebase token for authentication
+            localStorage.setItem(ACCESS_TOKEN, firebaseToken);
             
-            // Store the refresh token if present
-            if (tokenData.refresh) {
-                localStorage.setItem(REFRESH_TOKEN, tokenData.refresh);
-            }
-            
-            // Store the Django user ID
-            localStorage.setItem('DJANGO_USER_ID', tokenData.user_id);
+            // Store the Django user ID for creating trips
+            localStorage.setItem('DJANGO_USER_ID', djangoUserResponse.user_id);
             
             // Log the values for debugging
-            console.log("Stored ACCESS_TOKEN:", tokenData.access.substring(0, 20) + '...');
-            console.log("Stored DJANGO_USER_ID:", tokenData.user_id);
+            console.log("Stored ACCESS_TOKEN:", firebaseToken.substring(0, 20) + "...");
+            console.log("Stored DJANGO_USER_ID:", djangoUserResponse.user_id);
             
-            login(tokenData.access);
+            login(firebaseToken);
             navigate("/");
         } catch (error) {
             console.error("Google login error:", error);
@@ -122,33 +133,57 @@ function Form({ route, method }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="form-container">
-            <h1>{name}</h1>
-            {error && <div className="error-message">{error}</div>}
-            <input
-                className="form-input"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
-                required
-            />
-            <input
-                className="form-input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-            />
-            {loading && <LoadingIndicator />}
-            <button className="form-button" type="submit" disabled={loading}>
-                {name}
-            </button>
-            <button className="form-button" type="button" onClick={handleGoogleLogin} disabled={loading}>
-                {name} with Google
-            </button>
-        </form>
+        <div className="form-container">
+            <div className="form-inner">
+                <h1 className="form-title">{name}</h1>
+                
+                {error && <div className="error-message">{error}</div>}
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    
+                    <button type="submit" className="submit-button" disabled={loading}>
+                        {loading ? "Processing..." : name}
+                    </button>
+                </form>
+                
+                {method === "login" && (
+                    <div className="google-login">
+                        <div className="divider">
+                            <span>OR</span>
+                        </div>
+                        <button 
+                            onClick={handleGoogleLogin} 
+                            className="google-button"
+                            disabled={loading}
+                        >
+                            <i className="fab fa-google"></i>
+                            {loading ? "Processing..." : "Login with Google"}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }
 
