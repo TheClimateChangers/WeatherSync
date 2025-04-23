@@ -14,13 +14,13 @@ import { ACCESS_TOKEN } from './constants';
 
 // Logs out then shows Register
 function RegisterAndLogout() {
-  localStorage.clear();
+  localStorage.clear(); // Clear ALL local storage including DJANGO_USER_ID
   return <Register />;
 }
 
 // Logs out and redirects
 function Logout() {
-  localStorage.clear();
+  localStorage.clear(); // Clear ALL local storage including DJANGO_USER_ID
   return <Navigate to="/login" />;
 }
 

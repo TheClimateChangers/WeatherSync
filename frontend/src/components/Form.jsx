@@ -87,11 +87,19 @@ function Form({ route, method }) {
             const djangoUserResponse = await createOrGetUserFromGoogle(userData);
             console.log("Django user created/found:", djangoUserResponse);
             
+            if (!djangoUserResponse || !djangoUserResponse.user_id) {
+                throw new Error("Failed to create or retrieve Django user ID");
+            }
+            
             // Store the Firebase token for authentication
             localStorage.setItem(ACCESS_TOKEN, accessToken);
             
             // Store the Django user ID for creating trips
             localStorage.setItem('DJANGO_USER_ID', djangoUserResponse.user_id);
+            
+            // Log the values for debugging
+            console.log("Stored ACCESS_TOKEN:", accessToken);
+            console.log("Stored DJANGO_USER_ID:", djangoUserResponse.user_id);
             
             login(accessToken);
             navigate("/");

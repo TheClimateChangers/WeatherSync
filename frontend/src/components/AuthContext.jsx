@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
   const [username, setUsername] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authType, setAuthType] = useState(null); // 'google' or 'django'
 
   useEffect(() => {
     // Check for token on component mount
@@ -20,13 +21,28 @@ export const AuthProvider = ({ children }) => {
           const tokenPayload = JSON.parse(atob(token.split('.')[1]));
           const userId = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
           
+          // Determine if this is a Google auth token
+          const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
+          setAuthType(isGoogleAuth ? 'google' : 'django');
+          
           if (userId) {
             setIsAuthenticated(true);
             setUserId(userId);
             
+            // For Google auth, check if we have the Django user ID
+            if (isGoogleAuth) {
+              const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
+              if (!djangoUserId) {
+                console.warn('Google authentication detected, but no Django user ID found');
+              }
+            }
+            
             // Try to get username if available
             if (tokenPayload.username) {
               setUsername(tokenPayload.username);
+            } else if (tokenPayload.email) {
+              // Use email as fallback for display name
+              setUsername(tokenPayload.email.split('@')[0]);
             }
           } else {
             // No valid user ID found in token
@@ -51,6 +67,10 @@ export const AuthProvider = ({ children }) => {
         const tokenPayload = JSON.parse(atob(token.split('.')[1]));
         const userId = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
         
+        // Determine if this is a Google auth token
+        const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
+        setAuthType(isGoogleAuth ? 'google' : 'django');
+        
         if (userId) {
           setIsAuthenticated(true);
           setUserId(userId);
@@ -58,6 +78,9 @@ export const AuthProvider = ({ children }) => {
           // Try to get username if available
           if (tokenPayload.username) {
             setUsername(tokenPayload.username);
+          } else if (tokenPayload.email) {
+            // Use email as fallback for display name
+            setUsername(tokenPayload.email.split('@')[0]);
           }
         }
       } catch (error) {
@@ -68,9 +91,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem(ACCESS_TOKEN);
+    localStorage.removeItem('DJANGO_USER_ID');
     setIsAuthenticated(false);
     setUserId(null);
     setUsername(null);
+    setAuthType(null);
   };
 
   // Create a user in the backend if they don't exist (for Google auth)
@@ -86,14 +111,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Get information about current authentication
+  const getAuthInfo = () => {
+    return {
+      isAuthenticated,
+      userId,
+      username,
+      authType,
+      hasBackendUserId: !!localStorage.getItem('DJANGO_USER_ID')
+    };
+  };
+
   const value = {
     isAuthenticated,
     userId,
     username,
+    authType,
     isLoading,
     login,
     logout,
-    ensureUserExists
+    ensureUserExists,
+    getAuthInfo
   };
 
   return (

@@ -8,10 +8,12 @@ import Activities from '../components/Activities.jsx';
 import AddUsers from '../components/AddUsers.jsx';
 import { createTrip } from '../api.js';
 import { ACCESS_TOKEN } from '../constants';
+import { useNavigate } from 'react-router-dom';
 
 function Plan() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -25,25 +27,33 @@ function Plan() {
       if (!creatorId) {
         const token = localStorage.getItem(ACCESS_TOKEN);
         if (!token) {
-          throw new Error('User not authenticated');
+          throw new Error('You need to be logged in to create a trip. Please login and try again.');
         }
 
-        // Decode the token to get user info
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-        console.log('Token payload:', tokenPayload);
-        
-        // Get user ID from token - this could be different depending on if using JWT or Firebase
-        const googleUid = tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid;
-        
-        if (!googleUid) {
-          throw new Error('Could not determine user ID from authentication token');
+        try {
+          // Decode the token to get user info
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          console.log('Token payload:', tokenPayload);
+          
+          // Determine authentication type
+          const isGoogleAuth = tokenPayload.iss === 'https://securetoken.google.com';
+          
+          if (isGoogleAuth) {
+            const message = 'You are logged in with Google, but we could not find your Django user ID. Please log out and log in again with Google.';
+            console.error(message);
+            setError(message);
+            
+            if (confirm(message + ' Would you like to log out now?')) {
+              localStorage.clear();
+              navigate('/login');
+            }
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing token:', e);
         }
-
-        // For debugging
-        console.log('Using Google UID:', googleUid);
-        alert('You are authenticated with Google, but we could not find your Django user ID. Please try logging out and logging in again with Google.');
-        setIsSubmitting(false);
-        return;
+        
+        throw new Error('Could not determine user ID from authentication token. Please log out and log in again.');
       }
       
       // Convert creator_id to integer if it's a string
@@ -81,7 +91,7 @@ function Plan() {
       setEndDate(null);
     } catch (error) {
       console.error('Error creating trip:', error);
-      let errorMessage = 'Failed to create trip. Please try again.';
+      let errorMessage = error.message || 'Failed to create trip. Please try again.';
       
       // Extract and display more detailed error information
       if (error.response && error.response.data) {
