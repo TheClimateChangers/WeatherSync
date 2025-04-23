@@ -85,6 +85,18 @@ class FirebaseOrJWTAuthentication(BaseAuthentication):
                 if not firebase_uid:
                     logger.warning("Firebase token does not contain user ID")
                     return None
+                
+                # Check if we have a Django user ID in a custom header
+                django_user_id = request.META.get('HTTP_X_DJANGO_USER_ID')
+                if django_user_id:
+                    logger.info(f"Found Django user ID in header: {django_user_id}")
+                    try:
+                        user = User.objects.get(id=django_user_id)
+                        logger.info(f"Authenticated with Django user ID header for Firebase user {firebase_uid}")
+                        return (user, token)
+                    except User.DoesNotExist:
+                        logger.warning(f"User with ID {django_user_id} from header not found")
+                        # Continue with other authentication methods
                     
                 # Find user with this Firebase UID as username
                 try:

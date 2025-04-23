@@ -9,6 +9,7 @@ function Profile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tokenType, setTokenType] = useState(null);
+    const [retryCount, setRetryCount] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,19 +22,18 @@ function Profile() {
         // Try to determine the token type (helpful for debugging)
         try {
             const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            setTokenType(tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com') 
-                ? 'Google Firebase' 
-                : 'Django JWT');
-            console.log('Auth token type:', tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com') 
-                ? 'Google Firebase' 
-                : 'Django JWT');
+            const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
+            setTokenType(isGoogleAuth ? 'Google Firebase' : 'Django JWT');
+            console.log('Auth token type:', isGoogleAuth ? 'Google Firebase' : 'Django JWT');
+            console.log('User ID in token:', tokenPayload.user_id || tokenPayload.sub || tokenPayload.uid);
+            console.log('Django User ID in localStorage:', localStorage.getItem('DJANGO_USER_ID'));
         } catch (e) {
             console.error('Error parsing token:', e);
             setTokenType('Unknown');
         }
         
         fetchProfile();
-    }, [navigate]);
+    }, [navigate, retryCount]); // Add retryCount as dependency to trigger refetch
 
     const fetchProfile = async () => {
         setLoading(true);
@@ -50,8 +50,21 @@ function Profile() {
             if (err.response) {
                 if (err.response.status === 401) {
                     errorMessage = 'Your session has expired. Please login again.';
-                    // Optional: redirect to login
-                    // navigate('/login');
+                    
+                    // Check if it might be a Google token issue
+                    const token = localStorage.getItem(ACCESS_TOKEN);
+                    if (token) {
+                        try {
+                            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+                            const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
+                            
+                            if (isGoogleAuth) {
+                                errorMessage = 'Authentication issue with Google login. Please wait while we try to fix it...';
+                            }
+                        } catch (e) {
+                            console.error('Error parsing token in error handler:', e);
+                        }
+                    }
                 } else if (err.response.data && err.response.data.error) {
                     errorMessage = err.response.data.error;
                 }
@@ -72,6 +85,11 @@ function Profile() {
             console.error('Error following user:', err);
         }
     };
+    
+    const handleRetry = async () => {
+        // Increment retry count to trigger a refetch via useEffect
+        setRetryCount(prevCount => prevCount + 1);
+    };
 
     if (loading) return <div className="profile-container">Loading profile...</div>;
     if (error) return (
@@ -81,6 +99,10 @@ function Profile() {
                 <div className="debug-info">
                     <p>Authentication type: {tokenType}</p>
                     <p>User ID from localStorage: {localStorage.getItem('DJANGO_USER_ID')}</p>
+                    <p>Retry count: {retryCount}</p>
+                    <button onClick={handleRetry} className="retry-btn">
+                        Retry
+                    </button>
                     <button onClick={() => navigate('/login')} className="login-again-btn">
                         Login Again
                     </button>
