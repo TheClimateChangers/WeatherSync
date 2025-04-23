@@ -444,8 +444,6 @@ def create_or_get_user(request):
         name = request.data.get('name', '')
         email = request.data.get('email', '')
         
-        logger.info(f"create_or_get_user called with UID: {uid}, email: {email}")
-        
         if not uid:
             return Response({"error": "UID is required"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -453,15 +451,7 @@ def create_or_get_user(request):
         try:
             # Check if user exists with UID as username
             user = User.objects.get(username=uid)
-            logger.info(f"Found existing user with UID {uid} as username. User ID: {user.id}")
-            
-            # Make sure the user has a profile
-            try:
-                profile = UserProfile.objects.get(user=user)
-            except UserProfile.DoesNotExist:
-                logger.info(f"Creating profile for existing user {user.username}")
-                profile = UserProfile.objects.create(user=user)
-                
+            logger.info(f"Found existing user with UID {uid}")
             return Response({
                 "user_id": user.id,
                 "username": user.username,
@@ -469,171 +459,40 @@ def create_or_get_user(request):
                 "message": "User found"
             })
         except User.DoesNotExist:
-            pass  # User not found with UID as username, continue
-        
-        # Try to find by email if provided
-        if email:
-            try:
-                user = User.objects.get(email=email)
-                logger.info(f"Found existing user with email {email}. User ID: {user.id}")
-                
-                # Make sure the user has a profile
-                try:
-                    profile = UserProfile.objects.get(user=user)
-                except UserProfile.DoesNotExist:
-                    logger.info(f"Creating profile for existing user {user.username}")
-                    profile = UserProfile.objects.create(user=user)
-                    
-                return Response({
-                    "user_id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "message": "User found by email"
-                })
-            except User.DoesNotExist:
-                pass  # User not found by email, continue to create new user
-        
-        # Create a new user
-        username = uid
-        # Create username based on name if provided, otherwise use UID
-        if name:
-            username = name.lower().replace(' ', '_')
-            # Ensure username is unique
-            base_username = username
-            count = 1
-            while User.objects.filter(username=username).exists():
-                username = f"{base_username}_{count}"
-                count += 1
-        
-        # Create the user
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            # Set a random password since they'll use Google to sign in
-            password=User.objects.make_random_password()
-        )
-        
-        logger.info(f"Created new user with UID {uid} and username {username}. User ID: {user.id}")
-        
-        # Always create a profile for new users
-        try:
-            profile = UserProfile.objects.create(user=user)
-            logger.info(f"Created profile for new user {user.username}")
-        except Exception as e:
-            logger.error(f"Error creating profile for new user: {str(e)}")
-        
-        return Response({
-            "user_id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "message": "User created"
-        }, status=status.HTTP_201_CREATED)
-    
-    except Exception as e:
-        logger.error(f"Error in create_or_get_user: {str(e)}")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
-def exchange_firebase_token(request):
-    """
-    Exchanges a Firebase token for a Django JWT token
-    """
-    try:
-        # Get the Firebase token from the request
-        firebase_token = request.data.get('token')
-        if not firebase_token:
-            return Response({"error": "Firebase token is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Decode the token payload
-        import base64
-        import json
-        
-        # Basic validation - tokens have three segments
-        if firebase_token.count('.') != 2:
-            return Response({"error": "Invalid token format"}, status=status.HTTP_400_BAD_REQUEST)
-            
-        # Get the payload segment and fix padding
-        payload = firebase_token.split('.')[1]
-        padding = 4 - (len(payload) % 4)
-        if padding < 4:
-            payload += '=' * padding
-            
-        try:
-            decoded_payload = json.loads(base64.b64decode(payload).decode('utf-8'))
-            logger.info(f"Decoded Firebase token payload: {decoded_payload}")
-            
-            # Verify it's a Firebase token
-            if not ('iss' in decoded_payload and decoded_payload['iss'].endswith('securetoken.google.com')):
-                return Response({"error": "Not a valid Firebase token"}, status=status.HTTP_400_BAD_REQUEST)
-                
-            # Extract Firebase UID and email
-            firebase_uid = decoded_payload.get('user_id') or decoded_payload.get('sub') or decoded_payload.get('uid')
-            email = decoded_payload.get('email', '')
-            
-            if not firebase_uid:
-                return Response({"error": "Firebase token does not contain a user ID"}, status=status.HTTP_400_BAD_REQUEST)
-                
-            # Find or create the user
-            user = None
-            
-            # First try to find user by Firebase UID as username
-            try:
-                user = User.objects.get(username=firebase_uid)
-                logger.info(f"Found user with Firebase UID as username: {user.id}")
-            except User.DoesNotExist:
-                pass
-                
-            # If not found and we have an email, try by email
-            if not user and email:
-                try:
-                    user = User.objects.get(email=email)
-                    logger.info(f"Found user with email {email}: {user.id}")
-                except User.DoesNotExist:
-                    pass
-                    
-            # If still not found, create a new user
-            if not user:
-                # Create username from email or UID
-                username = firebase_uid
-                if email:
-                    username = email.split('@')[0]
-                    
+            # Create a new user
+            username = uid
+            # Create username based on name if provided, otherwise use UID
+            if name:
+                username = name.lower().replace(' ', '_')
                 # Ensure username is unique
                 base_username = username
                 count = 1
                 while User.objects.filter(username=username).exists():
                     username = f"{base_username}_{count}"
                     count += 1
-                
-                # Create the user
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=User.objects.make_random_password()
-                )
-                logger.info(f"Created new user for Firebase UID {firebase_uid}: {user.id}")
-                
-                # Create a profile for the user
-                UserProfile.objects.create(user=user)
-                
-            # Now create a Django JWT token for this user
-            from rest_framework_simplejwt.tokens import RefreshToken
-            refresh = RefreshToken.for_user(user)
             
-            # Return the tokens
+            # Create the user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                # Set a random password since they'll use Google to sign in
+                password=User.objects.make_random_password()
+            )
+            
+            # Store the Google UID in a custom field or profile
+            profile = user.profile
+            # You can add this field to UserProfile model if you want
+            # profile.google_uid = uid
+            profile.save()
+            
+            logger.info(f"Created new user with UID {uid} and username {username}")
             return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user_id': user.id,
-                'username': user.username,
-                'email': user.email
-            })
-                
-        except Exception as e:
-            logger.error(f"Error processing Firebase token: {str(e)}")
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
+                "user_id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "message": "User created"
+            }, status=status.HTTP_201_CREATED)
+    
     except Exception as e:
-        logger.error(f"Error in exchange_firebase_token: {str(e)}")
+        logger.error(f"Error in create_or_get_user: {str(e)}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

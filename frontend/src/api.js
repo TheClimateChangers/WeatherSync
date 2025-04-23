@@ -9,28 +9,7 @@ api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem(ACCESS_TOKEN);
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-            
-            // Log auth info for important endpoints
-            if (config.url && (config.url.includes('/api/profiles/') || config.url.includes('/api/trips/'))) {
-                console.log(`Making ${config.method.toUpperCase()} request to ${config.url}`);
-                console.log(`Authorization: Bearer ${token.substring(0, 20)}...`);
-                
-                try {
-                    // Try to determine if this is a Google token
-                    const payload = token.split('.')[1];
-                    const tokenData = JSON.parse(atob(payload));
-                    const isGoogleToken = tokenData.iss && tokenData.iss.includes('securetoken.google.com');
-                    console.log(`Token type: ${isGoogleToken ? 'Google Firebase' : 'Django JWT'}`);
-                    
-                    if (isGoogleToken) {
-                        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
-                        console.log(`Django user ID in localStorage: ${djangoUserId || 'not found'}`);
-                    }
-                } catch (e) {
-                    console.error('Error parsing token:', e);
-                }
-            }
+            config.headers.Authorization = `Bearer ${token}`
         }
         return config
     },
@@ -111,44 +90,10 @@ export const inviteUserToTrip = async (tripId, userId) => {
 
 export const getProfile = async () => {
     try {
-        // Check if we have the token before making the request
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-        
-        // Get Django user ID from localStorage
-        const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
-        
-        // Determine if this is a Google token
-        let isGoogleToken = false;
-        try {
-            const payload = token.split('.')[1];
-            const tokenData = JSON.parse(atob(payload));
-            isGoogleToken = tokenData.iss && tokenData.iss.includes('securetoken.google.com');
-        } catch (e) {
-            console.error('Error parsing token:', e);
-        }
-        
-        // For Google tokens, add Django user ID as a query parameter
-        let url = '/api/profiles/me/';
-        if (isGoogleToken && djangoUserId) {
-            url = `/api/profiles/me/?django_user_id=${djangoUserId}`;
-            console.log('Using Django user ID in URL:', djangoUserId);
-        }
-        
-        // Make the profile request
-        const response = await api.get(url);
+        const response = await api.get('/api/profiles/me/');
         return response.data;
     } catch (error) {
         console.error('Error fetching profile:', error);
-        
-        // Check for 401 errors that might be due to expired token
-        if (error.response && error.response.status === 401) {
-            console.error('Error response data:', error.response.data);
-            console.error('Unauthorized error - token may have expired');
-        }
-        
         throw error;
     }
 };
@@ -189,22 +134,6 @@ export const createOrGetUserFromGoogle = async (userData) => {
         return response.data;
     } catch (error) {
         console.error('Error creating/getting user from Google auth:', error);
-        if (error.response && error.response.data) {
-            console.error('Error details:', error.response.data);
-        }
-        throw error;
-    }
-};
-
-export const exchangeFirebaseToken = async (token) => {
-    try {
-        console.log('Exchanging Firebase token for Django JWT token');
-        const response = await axios.post(`${API_URL}/api/auth/exchange-firebase-token/`, {
-            token: token
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error exchanging Firebase token:', error);
         if (error.response && error.response.data) {
             console.error('Error details:', error.response.data);
         }

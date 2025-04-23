@@ -62,7 +62,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -70,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -161,15 +161,6 @@ OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
-# Add custom headers to allow in CORS requests
-from corsheaders.defaults import default_headers
-
-CORS_ALLOW_HEADERS = (
-    *default_headers,
-    "x-django-user-id",
-)
-
 # Import local settings
 try:
     from .local_settings import *

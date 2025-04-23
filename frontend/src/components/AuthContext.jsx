@@ -29,24 +29,11 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             setUserId(userId);
             
-            // For Google auth, ensure we retrieve and store the Django user ID if not present
+            // For Google auth, check if we have the Django user ID
             if (isGoogleAuth) {
               const djangoUserId = localStorage.getItem('DJANGO_USER_ID');
               if (!djangoUserId) {
-                console.warn('Google authentication detected, but no Django user ID found in localStorage');
-                // Make API call to retrieve the mapping for this Google user
-                try {
-                  const response = await axios.post(
-                    `${import.meta.env.VITE_URL_API}/api/auth/google-user/`,
-                    { uid: userId, email: tokenPayload.email || '' }
-                  );
-                  if (response.data && response.data.user_id) {
-                    localStorage.setItem('DJANGO_USER_ID', response.data.user_id);
-                    console.log('Retrieved and stored Django user ID:', response.data.user_id);
-                  }
-                } catch (error) {
-                  console.error('Error retrieving Django user ID for Google user:', error);
-                }
+                console.warn('Google authentication detected, but no Django user ID found');
               }
             } else {
               // For Django auth, ensure the user_id is saved to localStorage
