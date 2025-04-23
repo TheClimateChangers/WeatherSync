@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, followUser } from '../api';
 import { ACCESS_TOKEN } from '../constants';
 import '../styles/Profile.css';
+import { AuthContext } from '../components/AuthContext';
 
 function Profile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const { isAuthenticated } = useContext(AuthContext);
 
     useEffect(() => {
-        const token = localStorage.getItem(ACCESS_TOKEN);
-        if (!token) {
+        // Check authentication first
+        if (!isAuthenticated) {
+            console.log('User not authenticated, redirecting to login');
             navigate('/login');
             return;
         }
+        
         fetchProfile();
-    }, [navigate]);
+    }, [navigate, isAuthenticated]);
 
     const fetchProfile = async () => {
         try {
@@ -35,6 +39,13 @@ function Profile() {
             setError(null);
         } catch (err) {
             console.error('Error fetching profile:', err);
+            
+            // Check for unauthorized error
+            if (err.response && err.response.status === 401) {
+                console.log('Authentication required, redirecting to login');
+                navigate('/login');
+                return;
+            }
             
             // Show more detailed error message
             let errorMessage = 'Failed to load profile';
@@ -63,7 +74,7 @@ function Profile() {
         }
     };
 
-    if (loading) return <div className="profile-container">Loading...</div>;
+    if (loading) return <div className="profile-container">Loading profile...</div>;
     if (error) return <div className="profile-container">{error}</div>;
     if (!profile) return <div className="profile-container">Profile not found</div>;
 

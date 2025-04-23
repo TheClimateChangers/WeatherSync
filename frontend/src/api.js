@@ -90,8 +90,15 @@ export const inviteUserToTrip = async (tripId, userId) => {
 
 export const getProfile = async () => {
     try {
+        // Get the current token to ensure it's included in the request
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        
         // Use the 'me' endpoint to get the current user's profile
-        const response = await api.get('/api/profiles/me/');
+        const response = await api.get('/api/profiles/me/', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (error) {
         console.error('Error fetching profile:', error);
