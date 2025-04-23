@@ -35,6 +35,12 @@ export const AuthProvider = ({ children }) => {
               if (!djangoUserId) {
                 console.warn('Google authentication detected, but no Django user ID found');
               }
+            } else {
+              // For Django auth, ensure the user_id is saved to localStorage
+              if (tokenPayload.user_id) {
+                localStorage.setItem('DJANGO_USER_ID', tokenPayload.user_id);
+                console.log('Stored Django user ID from auth context:', tokenPayload.user_id);
+              }
             }
             
             // Try to get username if available
@@ -74,6 +80,12 @@ export const AuthProvider = ({ children }) => {
         if (userId) {
           setIsAuthenticated(true);
           setUserId(userId);
+          
+          // For Django auth, ensure we store the user_id
+          if (!isGoogleAuth && tokenPayload.user_id) {
+            localStorage.setItem('DJANGO_USER_ID', tokenPayload.user_id);
+            console.log('Stored Django user ID from login:', tokenPayload.user_id);
+          }
           
           // Try to get username if available
           if (tokenPayload.username) {

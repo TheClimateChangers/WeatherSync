@@ -35,8 +35,8 @@ function Plan() {
           const tokenPayload = JSON.parse(atob(token.split('.')[1]));
           console.log('Token payload:', tokenPayload);
           
-          // Determine authentication type
-          const isGoogleAuth = tokenPayload.iss === 'https://securetoken.google.com';
+          // Check if this is Google auth or Django auth
+          const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
           
           if (isGoogleAuth) {
             const message = 'You are logged in with Google, but we could not find your Django user ID. Please log out and log in again with Google.';
@@ -48,12 +48,20 @@ function Plan() {
               navigate('/login');
             }
             return;
+          } else {
+            // This is Django authentication - get the user_id from the token
+            creatorId = tokenPayload.user_id;
+            
+            if (!creatorId) {
+              throw new Error('Could not find user ID in Django token. Please log out and log in again.');
+            }
+            
+            console.log('Found Django user ID in token:', creatorId);
           }
         } catch (e) {
           console.error('Error parsing token:', e);
+          throw new Error('Error reading authentication token. Please log out and log in again.');
         }
-        
-        throw new Error('Could not determine user ID from authentication token. Please log out and log in again.');
       }
       
       // Convert creator_id to integer if it's a string

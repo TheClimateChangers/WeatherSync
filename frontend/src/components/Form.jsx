@@ -29,6 +29,18 @@ function Form({ route, method }) {
                 const data = await apiLogin({ username, password });
                 localStorage.setItem(ACCESS_TOKEN, data.access);
                 localStorage.setItem(REFRESH_TOKEN, data.refresh);
+                
+                // Extract and save the user ID from the token for Django users
+                try {
+                    const tokenPayload = JSON.parse(atob(data.access.split('.')[1]));
+                    if (tokenPayload.user_id) {
+                        localStorage.setItem('DJANGO_USER_ID', tokenPayload.user_id);
+                        console.log('Stored Django user ID:', tokenPayload.user_id);
+                    }
+                } catch (error) {
+                    console.error('Error parsing Django token:', error);
+                }
+                
                 console.log('Token stored', data.access);
                 login(data.access);
                 navigate("/");
