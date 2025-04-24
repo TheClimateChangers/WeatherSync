@@ -18,4 +18,14 @@ api.interceptors.request.use(
     }
 )
 
+export const getTripById = async (tripId) => {
+    try {
+      const response = await api.get(`/api/trips/${tripId}/`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching trip:", error);
+      throw error;
+    }
+  };
+  
 export default api
