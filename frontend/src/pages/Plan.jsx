@@ -85,7 +85,7 @@ function Plan() {
       
       console.log('Using Django creator ID:', numericCreatorId);
       console.log('Location:', location);
-      console.log('Start date:', startDate);
+      console.log('Start date:', startDate.toISOString().split('T')[0]);
       console.log('End date:', endDate);
       console.log('Selected activities:', selectedActivities);
       console.log('Added users:', addedUsers);
@@ -95,13 +95,13 @@ function Plan() {
 
       const payload = {
         creator_id: numericCreatorId,
-        location: cityName,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0], // Handle case where end date is null
+        location: cityName,
         // Use existing activity IDs that we know exist
-        activity_ids: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
         // Skip adding users for now to simplify
-        invited_user_ids: [],
+        events: [],
       };
 
       console.log('Sending payload:', payload);
@@ -152,18 +152,15 @@ function Plan() {
 
   //Step 2: Activities
   const activities = [
-    'Music',
-    'Visual Arts',
-    'Performing Arts',
-    'Film',
-    'Lectures & books',
-    'Fashion',
+    'Regional Cuisine',
     'Food & Drink',
-    'Festivals & Fairs',
-    'Charities',
-    'Sports & Active Life',
+    'Active & Outdoors',
+    'Arts & Culture',
+    'Shopping',
+    'Beauty',
+    'Local Attractions',
+    'Tours',
     'Nightlife',
-    'Kids & Family',
     'Other',
   ];
   const [selectedActivities, setSelectedActivities] = useState([]);

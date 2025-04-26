@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import WeatherData, YelpEvent, Trip, UserProfile, WeatherForecast
+from .models import Trip, UserProfile
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -18,28 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
         )
         return user
 
-class WeatherDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WeatherData
-        fields = ['id', 'location', 'temperature', 'description', 'timestamp', 'rain_chance', 'weather_conditions']
-        read_only_fields = ['id', 'timestamp']
-
-class WeatherForecastSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WeatherForecast
-        fields = ['id', 'location', 'forecast_date', 'temperature_min', 'temperature_max', 'description', 'rain_chance', 'weather_conditions', 'timestamp']
-        read_only_fields = ['id', 'timestamp']
-
-class YelpEventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = YelpEvent
-        fields = ['id', 'location', 'name', 'rating', 'price', 'categories', 'address', 'phone', 'url', 'image_url', 'timestamp']
-        read_only_fields = ['id', 'timestamp']
-
 class TripSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)
     invited_users = UserSerializer(many=True, read_only=True)
-    activities = YelpEventSerializer(many=True, read_only=True)
     creator_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='creator',
@@ -52,20 +33,13 @@ class TripSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
-    activity_ids = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=YelpEvent.objects.all(),
-        source='activities',
-        write_only=True,
-        required=False
-    )
-
+    
     class Meta:
         model = Trip
         fields = [
             'id', 'creator', 'creator_id', 'location', 'start_date', 'end_date',
-            'created_at', 'updated_at', 'activities', 'activity_ids',
-            'invited_users', 'invited_user_ids', 'is_active'
+            'created_at', 'updated_at',
+            'invited_users', 'invited_user_ids', 'is_active', 'itinerary'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

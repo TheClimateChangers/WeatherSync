@@ -43,7 +43,7 @@ export const getEvents = async (location) => {
 export const createTrip = async (tripData) => {
     try {
         console.log('Creating trip with data:', tripData);
-        const response = await axios.post(`${API_URL}/api/trips/create_with_string_ids/`, tripData);
+        const response = await axios.post(`${API_URL}/api/trips/`, tripData);
         return response.data;
     } catch (error) {
         console.error('Error creating trip:', error);

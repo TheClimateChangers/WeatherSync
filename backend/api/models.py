@@ -4,45 +4,6 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-class WeatherData(models.Model):
-    location = models.CharField(max_length=255)
-    temperature = models.FloatField()
-    description = models.CharField(max_length=255, default="No description available")
-    timestamp = models.DateTimeField(auto_now_add=True)
-    rain_chance = models.FloatField(default=0.0)
-    weather_conditions = models.JSONField(default=dict)
-
-    def __str__(self):
-        return f"{self.location} - {self.temperature}°C - {self.description}"
-
-class WeatherForecast(models.Model):
-    location = models.CharField(max_length=255)
-    forecast_date = models.DateField()
-    temperature_min = models.FloatField()
-    temperature_max = models.FloatField()
-    description = models.CharField(max_length=255)
-    rain_chance = models.FloatField(default=0.0)
-    weather_conditions = models.JSONField(default=dict)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.location} - {self.forecast_date} - {self.temperature_min}°C to {self.temperature_max}°C"
-
-class YelpEvent(models.Model):
-    location = models.CharField(max_length=255)
-    name = models.CharField(max_length=255)
-    rating = models.FloatField()
-    price = models.CharField(max_length=10, blank=True, null=True)
-    categories = models.JSONField()
-    address = models.TextField()
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
 class Trip(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_trips')
     location = models.CharField(max_length=255, default="Unknown", help_text="City or destination name for the trip")
@@ -50,9 +11,10 @@ class Trip(models.Model):
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    activities = models.ManyToManyField(YelpEvent, related_name='trips')
     invited_users = models.ManyToManyField(User, related_name='invited_trips')
     is_active = models.BooleanField(default=True)
+    
+    itinerary = models.JSONField(blank=True, null=True, help_text="Generated itinerary schedule")
 
     class Meta:
         ordering = ['-created_at']
