@@ -1,9 +1,17 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
-from .serializers import UserSerializer, TripSerializer, UserProfileSerializer
+from .serializers import (
+    UserSerializer, 
+    TripSerializer, 
+    UserProfileSerializer, 
+    WeatherSerializer,
+    ActivitySerializer,
+    DayActivitySerializer,
+    TripDaySerializer
+)
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Trip, UserProfile
+from .models import Trip, UserProfile, Weather, Activity, DayActivity, TripDay
 from .authentication import FirebaseOrJWTAuthentication
 import requests
 import logging
@@ -28,6 +36,75 @@ class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+class WeatherViewSet(viewsets.ModelViewSet):
+    queryset = Weather.objects.all()
+    serializer_class = WeatherSerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        queryset = Weather.objects.all()
+        location = self.request.query_params.get('location', None)
+        date = self.request.query_params.get('date', None)
+        
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+        if date:
+            queryset = queryset.filter(date=date)
+            
+        return queryset
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        queryset = Activity.objects.all()
+        location = self.request.query_params.get('location', None)
+        source = self.request.query_params.get('source', None)
+        category = self.request.query_params.get('category', None)
+        
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+        if source:
+            queryset = queryset.filter(source=source)
+        if category:
+            # Search in the categories JSONField
+            queryset = queryset.filter(categories__contains=[category])
+            
+        return queryset
+
+class DayActivityViewSet(viewsets.ModelViewSet):
+    queryset = DayActivity.objects.all()
+    serializer_class = DayActivitySerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        queryset = DayActivity.objects.all()
+        time_slot = self.request.query_params.get('time_slot', None)
+        
+        if time_slot:
+            queryset = queryset.filter(time_slot=time_slot)
+            
+        return queryset
+
+class TripDayViewSet(viewsets.ModelViewSet):
+    queryset = TripDay.objects.all()
+    serializer_class = TripDaySerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        queryset = TripDay.objects.all()
+        date = self.request.query_params.get('date', None)
+        trip_id = self.request.query_params.get('trip_id', None)
+        
+        if date:
+            queryset = queryset.filter(date=date)
+        if trip_id:
+            queryset = queryset.filter(trip__id=trip_id)
+            
+        return queryset
     
 class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
@@ -35,49 +112,42 @@ class TripViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Trip.objects.all()
+        queryset = Trip.objects.all()
+        location = self.request.query_params.get('location', None)
+        creator_id = self.request.query_params.get('creator_id', None)
+        
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+        if creator_id:
+            queryset = queryset.filter(creator_id=creator_id)
+            
+        return queryset
 
-    def perform_create(self, serializer):
+    @action(detail=True, methods=['post'])
+    def generate_itinerary(self, request, pk=None):
+        """
+        Generate an itinerary for an existing trip
+        """
+        trip = self.get_object()
+        
         try:
-            # Extract the necessary data from the request for itinerary generation
-            user_data = {
-                "location": self.request.data.get("location"),
-                "daterange": self.request.data.get("daterange"),
-                "activities": self.request.data.get("activities"),
-                "events": self.request.data.get("events", [])
-            }
+            # Optional: get custom activity types and events from request
+            activities = request.data.get('activities')
+            events = request.data.get('events')
             
-            # Validate the required fields
-            if not all([user_data["location"], user_data["daterange"], user_data["activities"]]):
-                logger.error("Missing required fields for itinerary")
-                raise serializers.ValidationError({"error": "Missing required fields"})
+            # Use the trip's generate_itinerary method
+            schedule = trip.generate_itinerary()
             
-            # Initialize the itinerary builder
-            builder = ItineraryBuilder(user_data)
-            schedule = builder.build_schedule()
-            
-            if self.request.user.is_authenticated:
-                creator = self.request.user
-            else:
-                creator, created = User.objects.get_or_create(username='default_user', email='default_user@example.com')
-
-            # Now you can create the Trip object
-            trip = serializer.save(creator=creator)
-
-            # Attach the itinerary to the trip or store it elsewhere, depending on your data model
-            # For example, saving the itinerary to the trip model (if needed)
-            trip.itinerary = schedule  # assuming itinerary is a field on your Trip model
-            trip.save()
-            logger.info(f"Trip created successfully with itinerary: {trip}")
-
-            return trip
+            return Response(
+                {"message": "Itinerary generated successfully", "itinerary": schedule},
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
-            logger.error(f"Error creating trip: {str(e)}")
-            raise
-
-    @action(detail=True, methods=['post']) #TODO: Need to update this logic
-    def perform_update(self, serializer):
-        pass
+            logger.error(f"Error generating itinerary: {str(e)}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['post'])
     def invite_user(self, request, pk=None):
@@ -139,25 +209,11 @@ class TripViewSet(viewsets.ModelViewSet):
             trip_data = request.data.copy()
             trip_data['creator_id'] = numeric_creator_id
             
-            # Convert activity_ids if present
-            activity_ids = request.data.get('activity_ids', [])
-            if activity_ids:
-                valid_activity_ids = []
-                for activity_id in activity_ids:
-                    try:
-                        numeric_activity_id = int(activity_id)
-                        # Verify the activity exists
-                        YelpEvent.objects.get(id=numeric_activity_id)
-                        valid_activity_ids.append(numeric_activity_id)
-                    except (ValueError, TypeError, YelpEvent.DoesNotExist):
-                        logger.warning(f"Invalid or non-existent activity ID: {activity_id}, skipping")
-                trip_data['activity_ids'] = valid_activity_ids
-            
             # Validate with serializer
             serializer = self.get_serializer(data=trip_data)
             serializer.is_valid(raise_exception=True)
             
-            # Save trip
+            # Save trip (the serializer.create method will automatically generate the itinerary)
             trip = serializer.save()
             logger.info(f"Trip created successfully: {trip}")
             
@@ -313,7 +369,7 @@ def get_ticketmaster_data(request):
         return Response({"error": "City, Date, Categories required"}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        ticketmaster_data = get_ticketmaster_data(location, date, categories, size=size)
+        ticketmaster_data = get_ticketmaster_events(location, date, categories, size=size)
         parsed = parse_all_ticketmaster(ticketmaster_data)
         return Response(parsed, status=status.HTTP_200_OK)
     except Exception as e:
