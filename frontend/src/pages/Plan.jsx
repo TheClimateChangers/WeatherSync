@@ -72,10 +72,10 @@ function Plan() {
   const [selectedEvents, setSelectedEvents] = useState([]);
 
   //Step 3: Users
-  const followedUsers = ["mark_smith", "julian_lee", "michael_chen", "giselle_ruiz", "nate_diaz", "jackie_chan", "marcus_aurelius"];
-  const [searchInput, setSearchInput] = useState("");
-  const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const [addedUsers, setAddedUsers] = useState([]);
+  // const followedUsers = ["mark_smith", "julian_lee", "michael_chen", "giselle_ruiz", "nate_diaz", "jackie_chan", "marcus_aurelius"];
+  // const [searchInput, setSearchInput] = useState("");
+  // const [suggestedUsers, setSuggestedUsers] = useState([]);
+  // const [addedUsers, setAddedUsers] = useState([]);
 
   //Date change
   const onDateChange = ([start, end]) => {
@@ -105,22 +105,22 @@ function Plan() {
   }, [selectedActivities, selectedEvents]);
 
   //User search
-  useEffect(() => {
-    const filtered = searchInput.trim()
-      ? followedUsers.filter((user) =>
-          user.toLowerCase().includes(searchInput.toLowerCase())
-        )
-      : [];
-    setSuggestedUsers(filtered);
-  }, [searchInput]);
+  // useEffect(() => {
+  //   const filtered = searchInput.trim()
+  //     ? followedUsers.filter((user) =>
+  //         user.toLowerCase().includes(searchInput.toLowerCase())
+  //       )
+  //     : [];
+  //   setSuggestedUsers(filtered);
+  // }, [searchInput]);
 
-  const addUser = (username) => {
-    if (!addedUsers.includes(username)) {
-      setAddedUsers([...addedUsers, username]);
-    }
-    setSearchInput("");
-    setSuggestedUsers([]);
-  };
+  // const addUser = (username) => {
+  //   if (!addedUsers.includes(username)) {
+  //     setAddedUsers([...addedUsers, username]);
+  //   }
+  //   setSearchInput("");
+  //   setSuggestedUsers([]);
+  // };
 
   //UI Sections
   const renderCalendarStep = () => (
@@ -360,6 +360,7 @@ function Plan() {
       </section>
   
       {/* Step 3: Users */}
+      {/*}
       <section style={{ opacity: isReadyToProceed ? 1 : 0.5, pointerEvents: isReadyToProceed ? "auto" : "none", marginTop: "40px" }}>
         <h3>Add users to your trip:</h3>
         <input
@@ -402,6 +403,7 @@ function Plan() {
           </>
         )}
       </section>
+      */}
   
       {/* Submit */}
       <div style={{ marginTop: "40px" }}>
