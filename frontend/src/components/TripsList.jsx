@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getTrips } from '../api.js';
 import { useNavigate } from 'react-router-dom';
 
+function formatDate(dateString) {
+  const [year, month, day] = dateString.split("-");
+  return `${month}/${day}`;
+}
+
 function TripsList() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +42,7 @@ function TripsList() {
               <h3>Trip to {trip.location || "Unknown"}</h3>
               <p className="trip-creator">By: {trip.creator.username}</p>
               <p className="trip-dates">
-                {new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}
+                {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
               </p>
               <div className="trip-stats">
                 <p>Activities: {trip.activities.length}</p>
