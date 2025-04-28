@@ -1,83 +1,73 @@
-import React, { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-
-//Reusable button
-const ContinueButton = ({ onClick, disabled, label = "Continue" }) => (
-  <button
-    disabled={disabled}
-    onClick={onClick}
-    style={{
-      backgroundColor: disabled ? "#ccc" : "#4CAF50",
-      color: "white",
-      padding: "10px 20px",
-      fontSize: "16px",
-      border: "none",
-      borderRadius: "5px",
-      cursor: disabled ? "not-allowed" : "pointer",
-      marginTop: "20px"
-    }}
-  >
-    {label}
-  </button>
-);
-
-//Style helpers
-const inputStyle = {
-  padding: "10px",
-  width: "300px",
-  borderRadius: "5px",
-  border: "1px solid #ccc",
-  marginBottom: "10px",
-};
-
-const userChipStyle = {
-  display: "inline-block",
-  backgroundColor: "#e8f5e9",
-  border: "1px solid #4CAF50",
-  borderRadius: "20px",
-  padding: "5px 10px",
-  margin: "5px",
-};
-
-const activityBoxStyle = (isSelected) => ({
-  padding: "20px",
-  border: `2px solid ${isSelected ? "#4CAF50" : "#ccc"}`,
-  borderRadius: "10px",
-  backgroundColor: isSelected ? "#e8f5e9" : "#f9f9f9",
-  cursor: "pointer",
-  transition: "0.2s ease",
-  fontSize: "16px",
-});
+import React, { useState, useEffect } from 'react';
+import 'react-datepicker/dist/react-datepicker.css';
+import LocationSearch from '../components/LocationSearch.jsx';
+import ContinueButton from '../components/ContinueButton.jsx';
+import '../styles/Plan.css';
+import DateCalendar from '../components/DateCalendar.jsx';
+import Activities from '../components/Activities.jsx';
+import AddUsers from '../components/AddUsers.jsx';
+import { createTrip } from '../api.js';
+import { ACCESS_TOKEN } from '../constants';
+import { useNavigate } from 'react-router-dom';
 
 function Plan() {
-  //Step control
-  const [showActivityPrompt, setShowActivityPrompt] = useState(false);
-  const [showUserPrompt, setShowUserPrompt] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  //Step 1: Dates
+  // Step 0: Location
+  const [location, setLocation] = useState("");
+  const handleLocationChange = (newLocation) => {
+    setLocation(newLocation);
+  };
+
+  // Step 1: Dates
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(null);
-  const [dateRange, setDateRange] = useState("");
+  const [dateRange, setDateRange] = useState('');
   const [isValidRange, setIsValidRange] = useState(false);
 
-  //Step 2: Activities
-  const activities = ["Regional Cuisine", "Food and Drink", "Active and Outdoor", "Arts and Culture"
-                      , "Shopping", "Beauty", "Local Attractions", "Tours", "Nightlife", "Other"];
+  // Step 2: Activities and Events
+  const activities = [
+    'Regional Cuisine',
+    'Food & Drink',
+    'Active & Outdoors',
+    'Arts & Culture',
+    'Shopping',
+    'Beauty',
+    'Local Attractions',
+    'Tours',
+    'Nightlife',
+    'Other',
+  ];
+  const events = ['Sports', 'Music', 'Arts and Theatre', 'Film', 'Other'];
+
   const [selectedActivities, setSelectedActivities] = useState([]);
+  const [selectedEvents, setSelectedEvents] = useState([]);
   const [isReadyToProceed, setIsReadyToProceed] = useState(false);
 
-  //new events
-  const events = ["Sports", "Music", "Arts and Theatre", "Film", "Other"]
-  const [selectedEvents, setSelectedEvents] = useState([]);
+  // Step 3: Users
+  const followedUsers = [
+    'mark_smith',
+    'julian_lee',
+    'michael_chen',
+    'giselle_ruiz',
+    'nate_diaz',
+    'jackie_chan',
+    'marcus_aurelius',
+  ];
+  const [searchInput, setSearchInput] = useState('');
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [addedUsers, setAddedUsers] = useState([]);
 
-  //Step 3: Users
-  // const followedUsers = ["mark_smith", "julian_lee", "michael_chen", "giselle_ruiz", "nate_diaz", "jackie_chan", "marcus_aurelius"];
-  // const [searchInput, setSearchInput] = useState("");
-  // const [suggestedUsers, setSuggestedUsers] = useState([]);
-  // const [addedUsers, setAddedUsers] = useState([]);
+  // Generic toggle for activities and events
+  const toggleItem = (item, selectedListSetter) => {
+    selectedListSetter(prev =>
+      prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item]
+    );
+  };
 
-  //Date change
+  // Date range display
   const onDateChange = ([start, end]) => {
     setStartDate(start);
     setEndDate(end);
@@ -88,345 +78,217 @@ function Plan() {
       setDateRange(`${startDate.toDateString()} - ${endDate.toDateString()}`);
       setIsValidRange(true);
     } else {
-      setDateRange(startDate ? `Start: ${startDate.toDateString()}` : "");
+      setDateRange(startDate ? `Start: ${startDate.toDateString()}` : '');
       setIsValidRange(false);
     }
   }, [startDate, endDate]);
 
-  //changed to include activities and events
-  const toggleItem = (item, setList) => {
-    setList((prev) =>
-      prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]
-    );
-  };
-
+  // Activity or event selected
   useEffect(() => {
     setIsReadyToProceed(selectedActivities.length > 0 || selectedEvents.length > 0);
   }, [selectedActivities, selectedEvents]);
 
-  //User search
-  // useEffect(() => {
-  //   const filtered = searchInput.trim()
-  //     ? followedUsers.filter((user) =>
-  //         user.toLowerCase().includes(searchInput.toLowerCase())
-  //       )
-  //     : [];
-  //   setSuggestedUsers(filtered);
-  // }, [searchInput]);
+  // Search for users
+  useEffect(() => {
+    const filtered = searchInput.trim()
+      ? followedUsers.filter(user =>
+          user.toLowerCase().includes(searchInput.toLowerCase())
+        )
+      : [];
+    setSuggestedUsers(filtered);
+  }, [searchInput]);
 
-  // const addUser = (username) => {
-  //   if (!addedUsers.includes(username)) {
-  //     setAddedUsers([...addedUsers, username]);
-  //   }
-  //   setSearchInput("");
-  //   setSuggestedUsers([]);
-  // };
+  const addUser = username => {
+    if (!addedUsers.includes(username)) {
+      setAddedUsers([...addedUsers, username]);
+    }
+    setSearchInput('');
+    setSuggestedUsers([]);
+  };
 
-  //UI Sections
-  const renderCalendarStep = () => (
-    <>
-      <DatePicker
-        selected={startDate}
-        onChange={onDateChange}
-        startDate={startDate}
-        endDate={endDate}
-        selectsRange
-        inline
-      />
-      <p>{dateRange}</p>
-      <ContinueButton
-        disabled={!isValidRange}
-        onClick={() => setShowActivityPrompt(true)}
-      />
-    </>
-  );
+  // Handle trip submission
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setError(null);
 
-  const renderActivityStep = () => (
-    <>
-      <h3>Select your activities:</h3>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-          gap: "15px",
-          maxWidth: "600px",
-          margin: "30px auto",
-        }}
-      >
-        {activities.map((activity) => (
-          <div
-            key={activity}
-            onClick={() => toggleItem(activity, selectedActivities, setSelectedActivities)}
-            style={activityBoxStyle(selectedActivities.includes(activity))}
-          >
-            {activity}
-          </div>
-        ))}
+    if (!location) {
+      setError("Please select a location for your trip.");
+      setIsSubmitting(false);
+      return;
+    }
 
-        {selectedActivities.length > 0 && (
-          <p>Selected activities: {selectedActivities.join(", ")}</p>
-        )}
+    try {
+      let creatorId = localStorage.getItem('DJANGO_USER_ID');
 
-        <h3>Select event:</h3>
-        {events.map((event) => (
-          <div
-            key={event}
-            onClick={() => toggleItem(event, selectedEvents, setSelectedEvents)}
-            style={activityBoxStyle(selectedEvents.includes(event))}
-          >
-          {event}
-          </div>
-        ))}
-      </div>
+      if (!creatorId) {
+        const token = localStorage.getItem(ACCESS_TOKEN);
+        if (!token) {
+          throw new Error('You need to be logged in to create a trip. Please login and try again.');
+        }
 
-        {selectedEvents.length > 0 && (
-          <p>Selected events: {selectedEvents.join(", ")}</p>
-        )}
-      
-      <ContinueButton
-        disabled={!isReadyToProceed}
-        onClick={() => setShowUserPrompt(true)}
-      />
-    </>
-  );
+        try {
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          const isGoogleAuth = tokenPayload.iss && tokenPayload.iss.includes('securetoken.google.com');
 
-  const renderUserStep = () => (
-    <>
-      <h3>Add users to your trip:</h3>
-      <input
-        type="text"
-        placeholder="Search users you follow..."
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        style={inputStyle}
-      />
-      {suggestedUsers.length > 0 && (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {suggestedUsers.map((user) => (
-            <li
-              key={user}
-              onClick={() => addUser(user)}
-              style={{
-                padding: "8px",
-                cursor: "pointer",
-                backgroundColor: "#f0f0f0",
-                margin: "4px auto",
-                maxWidth: "300px",
-                borderRadius: "5px"
-              }}
-            >
-              {user}
-            </li>
-          ))}
-        </ul>
-      )}
-      {addedUsers.length > 0 && (
-        <>
-          <h4>Added users:</h4>
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {addedUsers.map((user) => (
-              <li key={user} style={userChipStyle}>
-                {user}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      <ContinueButton
-        onClick={() => {
-            const payload = {
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
-            activities: selectedActivities,
-            invited_users: addedUsers,
-            };
+          if (isGoogleAuth) {
+            const message = 'You are logged in with Google, but we could not find your Django user ID. Please log out and log in again with Google.';
+            console.error(message);
+            setError(message);
 
-            console.log("📦 Data to send to backend:", payload);
-            alert("Plan data has been logged to the console!");
-        }}
-        label="Finish Planning"
-        />
+            if (confirm(message + ' Would you like to log out now?')) {
+              localStorage.clear();
+              navigate('/login');
+            }
+            return;
+          } else {
+            creatorId = tokenPayload.user_id;
 
-      {/*
-      <ContinueButton
-        onClick={() => {
-            const payload = {
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
-            activities: selectedActivities,
-            invited_users: addedUsers,
-            };
+            if (!creatorId) {
+              throw new Error('Could not find user ID in Django token. Please log out and log in again.');
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing token:', e);
+          throw new Error('Error reading authentication token. Please log out and log in again.');
+        }
+      }
 
-            fetch("http://localhost:8000/api/plans/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-            })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to save plan");
-                return res.json();
-            })
-            .then((data) => {
-                console.log("Plan saved:", data);
-                alert("Plan saved successfully!");
-                // Optional: redirect or clear state
-            })
-            .catch((err) => {
-                console.error("Error:", err);
-                alert("There was an error saving your plan.");
-            });
-        }}
-        label="Finish Planning"
-        />
-    */}
-    </>
-  );
+      const numericCreatorId = parseInt(creatorId, 10);
+      if (isNaN(numericCreatorId)) {
+        throw new Error('Invalid user ID format: must be a numeric value');
+      }
+
+      const cityName = location.includes(',') ? location.split(',')[0] : location;
+
+      const payload = {
+        creator_id: numericCreatorId,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0],
+        location: cityName,
+        activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        events: selectedEvents.length > 0 ? selectedEvents : [],
+      };
+
+      console.log('Sending payload:', payload);
+
+      const response = await createTrip(payload);
+      console.log('Trip created successfully:', response);
+      alert('Trip created successfully!');
+
+      setSelectedActivities([]);
+      setSelectedEvents([]);
+      setAddedUsers([]);
+      setStartDate(new Date());
+      setEndDate(null);
+      setLocation("");
+      navigate('/trips');
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      let errorMessage = error.message || 'Failed to create trip. Please try again.';
+
+      if (error.response && error.response.data) {
+        if (typeof error.response.data === 'object') {
+          const detailedErrors = [];
+          for (const [key, value] of Object.entries(error.response.data)) {
+            detailedErrors.push(`${key}: ${value}`);
+          }
+          errorMessage = detailedErrors.join('\n');
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div style={{ 
-      maxHeight: "90vh", 
-      overflowY: "auto", 
-      padding: "30px", 
-      margin: "0 auto", 
-      maxWidth: "700px", 
-      textAlign: "center" 
-    }}>
-      <h2 style={{ marginBottom: "30px" }}>Plan Your Trip</h2>
-  
-      {/* Step 1: Dates */}
-      <section>
-        <h3>Pick a date range:</h3>
-        <DatePicker
-          selected={startDate}
-          onChange={onDateChange}
-          startDate={startDate}
-          endDate={endDate}
-          selectsRange
-          inline
-        />
-        <p>{dateRange}</p>
-      </section>
-  
-      {/* Step 2: Activities */}
-      <section style={{ opacity: isValidRange ? 1 : 0.5, pointerEvents: isValidRange ? "auto" : "none", marginTop: "40px" }}>
-        <h3>Select your activities:</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: "15px",
-            margin: "30px auto",
-          }}
-        >
-          {activities.map((activity) => (
-            <div
-              key={activity}
-              onClick={() => toggleItem(activity, setSelectedActivities)}
-              style={activityBoxStyle(selectedActivities.includes(activity))}
-            >
-              {activity}
-            </div>
-          ))}
-        </div>
-        {selectedActivities.length > 0 && (
-          <p>Selected: {selectedActivities.join(", ")}</p>
-        )}
+    <div className="scroll-container"
+      style={{
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        padding: '30px',
+        margin: '0 auto',
+        maxWidth: '700px',
+        textAlign: 'center',
+      }}
+    >
+      <h2 style={{ marginBottom: '30px' }}>Plan Your Trip</h2>
 
-        {/*Step 2: Events*/}
-        <h3>Select your events:</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: "15px",
-            margin: "30px auto"
-          }}
-        >
-          {events.map((event) => (
+      {/* Step 0: Location */}
+      <div className="plan-section">
+        <h3>Where are you going?</h3>
+        <LocationSearch onLocationChange={handleLocationChange} />
+        {location && <p className="selected-location">Selected: {location}</p>}
+      </div>
+
+      {/* Step 1: Dates */}
+      <DateCalendar
+        startDate={startDate}
+        endDate={endDate}
+        onDateChange={onDateChange}
+        dateRange={dateRange}
+      />
+
+      {/* Step 2: Activities */}
+      <Activities
+        activities={activities}
+        selectedActivities={selectedActivities}
+        toggleActivity={(activity) => toggleItem(activity, setSelectedActivities)}
+      />
+
+      {/* Step 2: Events */}
+      <div className="plan-section">
+        <h3>Select Events:</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "10px" }}>
+          {events.map(event => (
             <div
               key={event}
               onClick={() => toggleItem(event, setSelectedEvents)}
-              style={activityBoxStyle(selectedEvents.includes(event))}
+              style={{
+                padding: "10px",
+                border: `2px solid ${selectedEvents.includes(event) ? "#4CAF50" : "#ccc"}`,
+                borderRadius: "10px",
+                backgroundColor: selectedEvents.includes(event) ? "#e8f5e9" : "#f9f9f9",
+                cursor: "pointer",
+                transition: "0.2s ease",
+              }}
             >
               {event}
             </div>
           ))}
         </div>
         {selectedEvents.length > 0 && (
-              <p>Selected: {selectedEvents.join(", ")}</p>
+          <p>Selected: {selectedEvents.join(", ")}</p>
         )}
-      </section>
-  
+      </div>
+
       {/* Step 3: Users */}
-      {/*}
-      <section style={{ opacity: isReadyToProceed ? 1 : 0.5, pointerEvents: isReadyToProceed ? "auto" : "none", marginTop: "40px" }}>
-        <h3>Add users to your trip:</h3>
-        <input
-          type="text"
-          placeholder="Search users you follow..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          style={inputStyle}
-        />
-        {suggestedUsers.length > 0 && (
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {suggestedUsers.map((user) => (
-              <li
-                key={user}
-                onClick={() => addUser(user)}
-                style={{
-                  padding: "8px",
-                  cursor: "pointer",
-                  backgroundColor: "#f0f0f0",
-                  margin: "4px auto",
-                  maxWidth: "300px",
-                  borderRadius: "5px"
-                }}
-              >
-                {user}
-              </li>
-            ))}
-          </ul>
-        )}
-        {addedUsers.length > 0 && (
-          <>
-            <h4>Added users:</h4>
-            <ul style={{ listStyle: "none", padding: 0 }}>
-              {addedUsers.map((user) => (
-                <li key={user} style={userChipStyle}>
-                  {user}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
-      */}
-  
+      <AddUsers
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        suggestedUsers={suggestedUsers}
+        addUser={addUser}
+        addedUsers={addedUsers}
+        isReadyToProceed={isReadyToProceed}
+      />
+
+      {/* Error message */}
+      {error && <div className="error-message">{error}</div>}
+
       {/* Submit */}
-      <div style={{ marginTop: "40px" }}>
+      <div style={{ marginTop: '40px' }}>
         <ContinueButton
-          onClick={() => {
-            const payload = {
-              start_date: startDate.toISOString().split("T")[0],
-              end_date: endDate.toISOString().split("T")[0],
-              activities: selectedActivities,
-              events: selectedEvents, //include events
-              invited_users: addedUsers,
-            };
-  
-            console.log("📦 Data to send to backend:", payload);
-            alert("Plan data has been logged to the console!");
-          }}
+          onClick={handleSubmit}
           label="Finish Planning"
-          disabled={!isValidRange || !isReadyToProceed}
+          disabled={!location || !isValidRange || !isReadyToProceed || isSubmitting}
         />
       </div>
     </div>
   );
-  
 }
 
 export default Plan;

@@ -1,0 +1,86 @@
+.yelp-events {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.yelp-events h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.events-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.event-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+}
+
+.event-card .rating {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.event-card .address,
+.event-card .phone {
+    color: #666;
+    margin: 0.25rem 0;
+}
+
+.event-card a {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+.event-card a:hover {
+    text-decoration: underline;
+}
+
+.events-container {
+    padding: 20px;
+}
+
+.weather-suitability {
+    margin-top: 10px;
+    padding: 5px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.suitability-bar {
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.suitability-fill {
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.3s ease;
+}
+
+/* Color coding for different suitability levels */
+.suitability-fill[style*="width: 0%"] { background-color: #f44336; }
+.suitability-fill[style*="width: 25%"] { background-color: #ff9800; }
+.suitability-fill[style*="width: 50%"] { background-color: #ffeb3b; }
+.suitability-fill[style*="width: 75%"] { background-color: #8bc34a; }
+.suitability-fill[style*="width: 100%"] { background-color: #4caf50; } 
