@@ -141,4 +141,24 @@ export const createOrGetUserFromGoogle = async (userData) => {
     }
 };
 
+export const getTripById = async (tripId) => {
+    const response = await fetch(`${import.meta.env.VITE_URL_API}/api/trips/${tripId}/`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch trip.');
+    }
+    return await response.json();
+};
+
+  
+  export const getYelpActivities = async (location) => {
+    try {
+      const response = await api.get(`/api/yelp-activities/?location=${encodeURIComponent(location)}&categories=active`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch Yelp activities:', error);
+      throw error;
+    }
+  };
+  
+  
 export default api
