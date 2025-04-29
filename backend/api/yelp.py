@@ -2,6 +2,8 @@ import requests
 import os
 import logging
 from datetime import datetime
+import aiohttp
+import asyncio
 
 # Get logger for this module
 logger = logging.getLogger('api')
@@ -13,47 +15,47 @@ yelp_headers = {
     "authorization": f"Bearer {API_KEY}"
 }
         
-def get_yelp_results(location, categories, limit=3, offset=0): #GETS YELP API RESULTS
+async def get_yelp_results(location, categories, limit=3, offset=0):  # Async now!
     """
-    Query Yelp API for businesses given a category list.
+    Asynchronously query Yelp API for businesses given a category list.
     """
     if not API_KEY:
         logger.error("YELP_API_KEY environment variable is not set")
         return {"businesses": []}
-        
+    
     if not location:
         logger.error("Location not provided for Yelp search")
         return {"businesses": []}
-        
+    
     if not categories:
         logger.warning("No categories provided for Yelp search, using default")
         categories = ["restaurants"]
-        
+    
+    params = {
+        "location": location,
+        "categories": categories,
+        "limit": limit,
+        "offset": offset,
+        "sort_by": "best_match",
+    }
+    logger.info(f"Querying Yelp API for {location} with categories {categories}")
     try:
-        params = {
-            "location": location,
-            "categories": categories,
-            "limit": limit,
-            "offset": offset,
-            "sort_by": "best_match",
-        }
-        
-        logger.info(f"Querying Yelp API for {location} with categories {categories}")
-        response = requests.get(yelp_url, headers=yelp_headers, params=params, timeout=10)
-        
-        if response.status_code == 200:
-            result = response.json()
-            logger.info(f"Found {len(result.get('businesses', []))} businesses from Yelp")
-            return result
-        else:
-            logger.error(f"Yelp API error ({response.status_code}): {response.text}")
-            return {"businesses": []}
-            
-    except requests.exceptions.Timeout:
+        async with aiohttp.ClientSession(headers=yelp_headers) as session:
+            async with session.get(yelp_url, params=params, timeout=10) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    logger.info(f"Found {len(result.get('businesses', []))} businesses from Yelp")
+                    return result
+                else:
+                    error_text = await response.text()
+                    logger.error(f"Yelp API error ({response.status}): {error_text}")
+                    return {"businesses": []}
+    
+    except asyncio.TimeoutError:
         logger.error("Yelp API request timed out")
         return {"businesses": []}
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Yelp API request failed: {str(e)}")
+    except aiohttp.ClientError as e:
+        logger.error(f"Yelp API client error: {str(e)}")
         return {"businesses": []}
     except Exception as e:
         logger.error(f"Unexpected error querying Yelp API: {str(e)}")

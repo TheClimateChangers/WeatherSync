@@ -1,8 +1,9 @@
 import axios from "axios"
 import { ACCESS_TOKEN } from "./constants"
 
+//baseURL: import.meta.env.VITE_URL_API
 const api = axios.create({
-    baseURL: import.meta.env.VITE_URL_API
+    baseURL: "http://127.0.0.1:8000"
 })
 
 api.interceptors.request.use(
@@ -18,7 +19,8 @@ api.interceptors.request.use(
     }
 )
 
-const API_URL = import.meta.env.VITE_URL_API;
+// const API_URL = import.meta.env.VITE_URL_API;
+const API_URL = "http://127.0.0.1:8000";
 
 export const getWeather = async (location) => {
     try {
@@ -39,6 +41,39 @@ export const getEvents = async (location) => {
         throw error;
     }
 };
+
+export const generateTrip = async (tripData) => {
+    try {
+        console.log('Creating trip with data:', tripData);
+        
+        // Step 1: Create the trip by posting the data
+        const createResponse = await axios.post(`${API_URL}/api/trips/create_with_string_ids/`, tripData);
+        
+        // Step 2: Check if trip creation was successful
+        if (createResponse.status === 201) {
+            const tripId = createResponse.data.id; // assuming the response contains the trip's ID
+            
+            console.log('Trip created successfully:', createResponse.data);
+            
+            // Step 3: Generate the itinerary using the created trip's ID
+            const itineraryResponse = await axios.post(`${API_URL}/api/trips/${tripId}/generate_itinerary/`, {
+                trip_id: tripId,  // Pass the trip ID to the generate_itinerary endpoint
+            });
+            
+            console.log('Itinerary generated successfully:', itineraryResponse.data);
+            return itineraryResponse.data;
+        } else {
+            throw new Error('Trip creation failed');
+        }
+    } catch (error) {
+        console.error('Error creating trip or generating itinerary:', error);
+        if (error.response && error.response.data) {
+            console.error('Error details:', error.response.data);
+        }
+        throw error;
+    }
+}
+
 
 export const createTrip = async (tripData) => {
     try {

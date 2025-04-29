@@ -1,3 +1,4 @@
+import asyncio
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, viewsets, status
@@ -24,10 +25,11 @@ from django.db import models
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework import serializers
 from rest_framework import permissions
-from .itinerary import ItineraryBuilder
 from .weather import get_weather
 from .yelp import get_yelp_results, parse_all_yelp
 from .ticketmaster import get_ticketmaster_events, parse_all_ticketmaster
+from .trip_manager import TripManager
+from asgiref.sync import async_to_sync
 
 logger = logging.getLogger(__name__)
 
@@ -129,19 +131,32 @@ class TripViewSet(viewsets.ModelViewSet):
         Generate an itinerary for an existing trip
         """
         trip = self.get_object()
-        
+
         try:
             # Optional: get custom activity types and events from request
-            activities = request.data.get('activities')
-            events = request.data.get('events')
-            
-            # Use the trip's generate_itinerary method
-            schedule = trip.generate_itinerary()
-            
+            activities = request.data.get('activities', ['Food & Drink', 'Arts & Culture', 'Nightlife'])
+            events = request.data.get('events', ['Music', 'Sports', 'Art'])
+
+            # Prepare user data for the ItineraryBuilder
+            user_data = {
+                'location': trip.location,
+                'daterange': [str(trip.start_date), str(trip.end_date)],
+                'activities': activities,
+                'events': events
+            }
+
+            # Generate itinerary using TripManager's method (which uses ItineraryBuilder)
+            schedule = async_to_sync(TripManager.generate_itinerary)(trip)
+
+
+            # Optionally, save itinerary to the database here
+            TripManager.save_itinerary(trip, schedule)
+
             return Response(
                 {"message": "Itinerary generated successfully", "itinerary": schedule},
                 status=status.HTTP_200_OK
             )
+
         except Exception as e:
             logger.error(f"Error generating itinerary: {str(e)}")
             return Response(
@@ -306,25 +321,6 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         profiles = UserProfile.objects.filter(user__in=followers)
         serializer = self.get_serializer(profiles, many=True)
         return Response(serializer.data)
-
-class ItineraryView(APIView):
-    def post(self, request):
-        try:
-            user_data = {
-                "location": request.data.get("location"),
-                "daterange": request.data.get("daterange"),
-                "activities": request.data.get("activities"),
-                "events": request.data.get("events", [])
-            }
-            if not all([user_data["location"], user_data["daterange"], user_data["activities"]]):
-                return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            builder = ItineraryBuilder(user_data)
-            schedule = builder.build_schedule()
-            
-            return Response({"itinerary": schedule}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_weather_data(request):

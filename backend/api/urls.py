@@ -11,7 +11,6 @@ from .views import (
     get_ticketmaster_data, 
     get_yelp_data, 
     get_weather_data,
-    ItineraryView
 )
 
 router = DefaultRouter()
@@ -29,5 +28,4 @@ urlpatterns = [
     path('yelp-activities/', get_yelp_data, name='get-yelp-data'),
     path('ticketmaster-events/', get_ticketmaster_data, name='get-ticketmaster-data'),
     path('weather-data/', get_weather_data, name='get-weather-data'),
-    path('generate-itinerary/', ItineraryView.as_view(), name='generate-itinerary'),
 ]

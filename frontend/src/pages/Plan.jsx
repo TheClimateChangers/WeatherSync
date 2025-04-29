@@ -5,8 +5,7 @@ import ContinueButton from '../components/ContinueButton.jsx';
 import '../styles/Plan.css';
 import DateCalendar from '../components/DateCalendar.jsx';
 import Activities from '../components/Activities.jsx';
-import AddUsers from '../components/AddUsers.jsx';
-import { createTrip } from '../api.js';
+import { createTrip, generateTrip } from '../api.js';
 import { ACCESS_TOKEN } from '../constants';
 import { useNavigate } from 'react-router-dom';
 
@@ -88,31 +87,30 @@ function Plan() {
       console.log('Start date:', startDate.toISOString().split('T')[0]);
       console.log('End date:', endDate);
       console.log('Selected activities:', selectedActivities);
-      console.log('Added users:', addedUsers);
-
+      
       // Extract city name from location (if it contains a comma)
       const cityName = location.includes(',') ? location.split(',')[0] : location;
-
+      
+      console.log('City name:', cityName)
       const payload = {
         creator_id: numericCreatorId,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0], // Handle case where end date is null
         location: cityName,
         // Use existing activity IDs that we know exist
-        activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        activities: selectedActivities.length > 0 ? selectedActivities : [],
         // Skip adding users for now to simplify
         events: [],
       };
 
       console.log('Sending payload:', payload);
 
-      const response = await createTrip(payload);
+      const response = await generateTrip(payload);
       console.log('Trip created successfully:', response);
       alert('Trip created successfully!');
       
       // Reset form or navigate to trips list
       setSelectedActivities([]);
-      setAddedUsers([]);
       setStartDate(new Date());
       setEndDate(null);
       setLocation("");
@@ -166,20 +164,6 @@ function Plan() {
   const [selectedActivities, setSelectedActivities] = useState([]);
   const [isReadyToProceed, setIsReadyToProceed] = useState(false);
 
-  //Step 3: Users
-  const followedUsers = [
-    'mark_smith',
-    'julian_lee',
-    'michael_chen',
-    'giselle_ruiz',
-    'nate_diaz',
-    'jackie_chan',
-    'marcus_aurelius',
-  ];
-  const [searchInput, setSearchInput] = useState('');
-  const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const [addedUsers, setAddedUsers] = useState([]);
-
   //Date change
   const onDateChange = ([start, end]) => {
     setStartDate(start);
@@ -206,24 +190,6 @@ function Plan() {
   useEffect(() => {
     setIsReadyToProceed(selectedActivities.length > 0);
   }, [selectedActivities]);
-
-  //User search
-  useEffect(() => {
-    const filtered = searchInput.trim()
-      ? followedUsers.filter(user =>
-          user.toLowerCase().includes(searchInput.toLowerCase())
-        )
-      : [];
-    setSuggestedUsers(filtered);
-  }, [searchInput]);
-
-  const addUser = username => {
-    if (!addedUsers.includes(username)) {
-      setAddedUsers([...addedUsers, username]);
-    }
-    setSearchInput('');
-    setSuggestedUsers([]);
-  };
 
   return (
     <div className="scroll-container"
@@ -258,15 +224,7 @@ function Plan() {
         selectedActivities={selectedActivities}
         toggleActivity={toggleActivity}
       />
-      {/* Step 3: Users */}
-      <AddUsers
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        suggestedUsers={suggestedUsers}
-        addUser={addUser}
-        addedUsers={addedUsers}
-        isReadyToProceed={isReadyToProceed}
-      />
+      
       {/* Error message */}
       {error && <div className="error-message">{error}</div>}
       {/* Submit */}

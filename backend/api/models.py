@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from .trip_manager import TripManager
 
 class Weather(models.Model):
     """
@@ -35,8 +36,8 @@ class Activity(models.Model):
     categories = models.JSONField(default=list)
     address = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
-    image_url = models.URLField(blank=True, null=True)
+    url = models.TextField(blank=True, null=True)
+    image_url = models.TextField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     # Additional fields for activity scheduling
     start_time = models.TimeField(null=True, blank=True)
@@ -133,106 +134,9 @@ class Trip(models.Model):
         if not self.pk:
             self.full_clean()
         super().save(*args, **kwargs)
-    
+        
     def generate_itinerary(self):
-        """
-        Generate an itinerary for this trip using the ItineraryBuilder.
-        This method will create the necessary TripDay, Activity, and DayActivity objects.
-        """
-        from .itinerary import ItineraryBuilder
-        
-        # Prepare the date range
-        date_range = []
-        current_date = self.start_date
-        while current_date <= self.end_date:
-            date_range.append(current_date.strftime("%Y-%m-%d"))
-            current_date += timezone.timedelta(days=1)
-        
-        # Prepare user data for the ItineraryBuilder
-        user_data = {
-            'location': self.location,
-            'daterange': date_range,
-            'activities': ['Food & Drink', 'Arts & Culture', 'Nightlife'],  # Default activities
-            'events': ['Music', 'Sports', 'Art']  # Default events
-        }
-        
-        # Generate the itinerary
-        builder = ItineraryBuilder(user_data)
-        schedule = builder.build_schedule()
-        
-        # Save the legacy itinerary field
-        self.itinerary = schedule
-        self.save()
-        
-        # Create TripDay, Weather, Activity, and DayActivity objects
-        for date_str, data in schedule.items():
-            itinerary, weather_data = data
-            
-            # Create or get Weather object
-            weather, _ = Weather.objects.update_or_create(
-                location=self.location,
-                date=timezone.datetime.strptime(date_str, "%Y-%m-%d").date(),
-                defaults={
-                    'temperature': weather_data.get('temperature', 0),
-                    'description': 'Weather forecast',
-                    'rain_chance': weather_data.get('precipitation', 0) * 100,
-                    'weather_conditions': {
-                        'cloud_cover': weather_data.get('cloud_cover', 0),
-                        'wind': weather_data.get('wind', 0),
-                        'humidity': weather_data.get('humidity', 0)
-                    }
-                }
-            )
-            
-            # Create TripDay
-            trip_day = TripDay.objects.create(
-                date=timezone.datetime.strptime(date_str, "%Y-%m-%d").date(),
-                weather=weather
-            )
-            
-            # Add TripDay to Trip
-            self.days.add(trip_day)
-            
-            # Process activities for each time slot
-            for time_slot, activities in itinerary.items():
-                if not activities:
-                    continue
-                
-                # Handle both single activities and lists of activities
-                activity_list = activities if isinstance(activities, list) else [activities]
-                
-                for order, activity_data in enumerate(activity_list):
-                    # Create or get Activity
-                    activity, _ = Activity.objects.update_or_create(
-                        name=activity_data.get('name', 'Unknown'),
-                        location=self.location,
-                        defaults={
-                            'rating': activity_data.get('rating'),
-                            'url': activity_data.get('url'),
-                            'image_url': activity_data.get('image_url'),
-                            'address': activity_data.get('location', {}).get('address'),
-                            'categories': [activity_data.get('category', 'Other')],
-                            'start_time': activity_data.get('start_time'),
-                            'end_time': activity_data.get('end_time'),
-                            'source': 'YELP' if 'rating' in activity_data else 'TICKETMASTER',
-                            'external_id': activity_data.get('id')
-                        }
-                    )
-                    
-                    # Add Activity to Trip's activities
-                    self.activities.add(activity)
-                    
-                    # Create DayActivity
-                    day_activity = DayActivity.objects.create(
-                        activity=activity,
-                        time_slot=time_slot,
-                        order=order
-                    )
-                    
-                    # Add DayActivity to TripDay
-                    trip_day.activities.add(day_activity)
-        
-        return schedule
+        return TripManager.generate_itinerary(self)
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

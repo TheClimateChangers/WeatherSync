@@ -108,7 +108,7 @@ class TripSerializer(serializers.ModelSerializer):
             trip.invited_users.add(user)
         
         # Generate the itinerary
-        trip.generate_itinerary()
+        # trip.generate_itinerary()
         
         return trip
 

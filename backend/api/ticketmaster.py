@@ -2,6 +2,8 @@ import requests
 import os
 import logging
 from datetime import datetime, timedelta
+import aiohttp
+import asyncio
 
 # Get logger for this module
 logger = logging.getLogger('api')
@@ -9,61 +11,47 @@ logger = logging.getLogger('api')
 TICKETMASTER_API_KEY = os.getenv("TICKETMASTER_API_KEY")
 TICKETMASTER_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
 
-def get_ticketmaster_events(location, date, categories, size=1): #GETS TICKETMASTER API RESULTS
+async def get_ticketmaster_events(location, day, events):
     """
-    Query Ticketmaster API for events given a location and categories.
+    Asynchronously query the Ticketmaster API for events based on location and time range.
     """
     if not TICKETMASTER_API_KEY:
-        logger.error("TICKETMASTER_API_KEY environment variable is not set")
-        return {"_embedded": {"events": [get_default_event(location)]}}
-        
-    if not location:
-        logger.error("Location not provided for Ticketmaster search")
-        return {"_embedded": {"events": [get_default_event(location)]}}
-        
-    if not categories:
-        logger.warning("No categories provided for Ticketmaster search, using default")
-        categories = ["Music"]
-        
+        logger.error("TICKETMASTER_TICKETMASTER_API_KEY environment variable is not set")
+        return {}
+
+    if not location or not events:
+        logger.error("Location or events parameters missing for Ticketmaster API")
+        return {}
+
+    params = {
+        "apikey": TICKETMASTER_API_KEY,
+        "city": location,  # location should be in "lat,long" format
+        "radius": 10,
+        "unit": "miles",
+        "localStartDateTime": day,  # start of the time range
+        "segmentName": ",".join(events),     # Join events with commas
+    }
+    logger.info(f"Querying Ticketmaster API for location {location} and events {events}")
+    
     try:
-        #daterange: convert 'date' to range
-        # ex. 2025-04-25 to 2025-04-25T10:00:00,2025-04-25T22:00:00
-        daterange = date
-        params = {
-            "apikey": TICKETMASTER_API_KEY,
-            "city": location,
-            "radius": 10,
-            "unit": "miles",
-            "size": size,
-            "segmentName": ",".join(categories),
-            "localStartDateTime": daterange,
-        }
-        
-        logger.info(f"Querying Ticketmaster API for {location} with categories {categories}")
-        response = requests.get(TICKETMASTER_URL, params=params, timeout=10)
-        
-        if response.status_code == 200:
-            result = response.json()
-            # Check if the response contains events
-            if '_embedded' not in result or 'events' not in result.get('_embedded', {}):
-                logger.warning(f"No events found for {location} with categories {categories}")
-                return {"_embedded": {"events": [get_default_event(location)]}}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(TICKETMASTER_URL, params=params, timeout=10) as response:
+                response.raise_for_status()
+                data = await response.json()
                 
-            logger.info(f"Found {len(result.get('_embedded', {}).get('events', []))} events from Ticketmaster")
-            return result
-        else:
-            logger.error(f"Ticketmaster API error ({response.status_code}): {response.text}")
-            return {"_embedded": {"events": [get_default_event(location)]}}
-            
-    except requests.exceptions.Timeout:
-        logger.error("Ticketmaster API request timed out")
-        return {"_embedded": {"events": [get_default_event(location)]}}
-    except requests.exceptions.RequestException as e:
+                # Check for '_embedded' in the response
+                if '_embedded' in data and 'events' in data['_embedded']:
+                    logger.info(f"Found {len(data['_embedded']['events'])} events")
+                    return data['_embedded']['events']
+                else:
+                    logger.warning("Ticketmaster API response doesn't contain '_embedded' or 'events'")
+                    return []
+    except aiohttp.ClientError as e:
         logger.error(f"Ticketmaster API request failed: {str(e)}")
-        return {"_embedded": {"events": [get_default_event(location)]}}
+        return []
     except Exception as e:
         logger.error(f"Unexpected error querying Ticketmaster API: {str(e)}")
-        return {"_embedded": {"events": [get_default_event(location)]}}
+        return []
 
 def get_default_event(location):
     """Return a default event when API fails"""

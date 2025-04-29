@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 import logging
 import os
 from datetime import datetime
@@ -10,7 +10,7 @@ logger = logging.getLogger('api')
 API_KEY = os.getenv('OPENWEATHER_API_KEY') or "2ef5457d3740b15926588d09a68c24da"
 API_URL = "https://api.openweathermap.org/data/3.0/onecall/day_summary"
 
-def get_weather(latitude, longitude, date):
+async def get_weather(latitude, longitude, date):
     """
     input: latitude, longitude, date (YYYY-MM-DD)
     output: weather info dict
@@ -42,19 +42,22 @@ def get_weather(latitude, longitude, date):
     
     try:
         logger.info(f"Fetching weather data for: lat={latitude}, lon={longitude}, date={date}")
-        response = requests.get(API_URL, params=params, timeout=10)
-        response.raise_for_status()
-        r = response.json()
         
-        # Safely extract data with fallbacks
-        weather_data['temperature'] = r.get('temperature', {}).get('afternoon', 75)
-        weather_data['cloud_cover'] = r.get('cloud_cover', {}).get('afternoon', 0)
-        weather_data['wind'] = r.get('wind', {}).get('max', {}).get('speed', 10)
-        weather_data['humidity'] = r.get('humidity', {}).get('afternoon', 50)
-        weather_data['precipitation'] = r.get('precipitation', {}).get('total', 0)
-        
-        logger.info(f"Successfully retrieved weather data for {date}")
-    except requests.exceptions.RequestException as e:
+        # Async HTTP request with aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(API_URL, params=params, timeout=10) as response:
+                response.raise_for_status()
+                r = await response.json()
+                
+                # Safely extract data with fallbacks
+                weather_data['temperature'] = r.get('temperature', {}).get('afternoon', 75)
+                weather_data['cloud_cover'] = r.get('cloud_cover', {}).get('afternoon', 0)
+                weather_data['wind'] = r.get('wind', {}).get('max', {}).get('speed', 10)
+                weather_data['humidity'] = r.get('humidity', {}).get('afternoon', 50)
+                weather_data['precipitation'] = r.get('precipitation', {}).get('total', 0)
+                
+                logger.info(f"Successfully retrieved weather data for {date}")
+    except aiohttp.ClientError as e:
         logger.error(f"Weather API request failed: {str(e)}")
     except KeyError as e:
         logger.error(f"Missing expected data in weather API response: {str(e)}")
