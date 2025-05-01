@@ -82,6 +82,13 @@ function Plan() {
     }
   }, [startDate, endDate]);
 
+  //Activity toggle
+  // const toggleActivity = name => {
+  //   setSelectedActivities(prev =>
+  //     prev.includes(name) ? prev.filter(a => a !== name) : [...prev, name]
+  //   );
+  // };
+
   // Activity or event selected
   useEffect(() => {
     setIsReadyToProceed(selectedActivities.length > 0 || selectedEvents.length > 0);
@@ -110,6 +117,7 @@ function Plan() {
     setIsSubmitting(true);
     setError(null);
 
+    //Validate location
     if (!location) {
       setError("Please select a location for your trip.");
       setIsSubmitting(false);
@@ -117,8 +125,10 @@ function Plan() {
     }
 
     try {
+      //Try to get the Django user ID first (created during Google login)
       let creatorId = localStorage.getItem('DJANGO_USER_ID');
 
+      // If not found, try to get it from the JWT token as a fallback
       if (!creatorId) {
         const token = localStorage.getItem(ACCESS_TOKEN);
         if (!token) {
@@ -173,7 +183,8 @@ function Plan() {
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0],
         location: cityName,
-        activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        //activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
+        activities: selectedActivities.length > 0 ? selectedActivities : [],
         events: selectedEvents.length > 0 ? selectedEvents : [],
       };
 
@@ -275,6 +286,7 @@ function Plan() {
       </div>
 
       {/* Step 3: Users */}
+      {/*
       <AddUsers
         searchInput={searchInput}
         setSearchInput={setSearchInput}
@@ -283,6 +295,7 @@ function Plan() {
         addedUsers={addedUsers}
         isReadyToProceed={isReadyToProceed}
       />
+      */}
 
       {/* Error message */}
       {error && <div className="error-message">{error}</div>}
