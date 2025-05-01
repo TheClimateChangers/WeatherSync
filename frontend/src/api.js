@@ -3,7 +3,7 @@ import { ACCESS_TOKEN } from "./constants"
 
 //baseURL: import.meta.env.VITE_URL_API
 const api = axios.create({
-    baseURL: "http://127.0.0.1:8000"
+    baseURL: import.meta.env.VITE_URL_API
 })
 
 api.interceptors.request.use(
