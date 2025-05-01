@@ -6,7 +6,6 @@ import SideBar from "./SideBar";
 import Footer from "./Footer"
 import "../styles/Layout.css";
 
-
 const Layout = () => {
   return (
     <div className="layout-container">

@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import Plan from './pages/Plan';
 import Trips from './pages/Trips';
+import TripDetails from './pages/TripDetails';
 import Profile from './pages/Profile';
 import CustomPlan from './pages/CustomPlan';
 import NotFound from './pages/NotFound';
@@ -50,6 +51,7 @@ function App() {
             </Protected>
           } />
           <Route path="trips" element={<Trips />} />
+          <Route path="/trips/:tripId" element={<TripDetails />} />
           <Route path="custom-trip" element={<CustomPlan />} />
           <Route path="*" element={<NotFound />} />
         </Route>
