@@ -180,8 +180,8 @@ function Plan() {
       console.log('City name:', cityName)
       const payload = {
         creator_id: numericCreatorId,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate ? endDate.toISOString().split('T')[0] : startDate.toISOString().split('T')[0],
+        start_date: startDate.toLocaleDateString('en-CA'),  // 'YYYY-MM-DD' format
+        end_date: endDate ? endDate.toLocaleDateString('en-CA') : startDate.toLocaleDateString('en-CA'),
         location: cityName,
         //activities: selectedActivities.length > 0 ? [1, 2, 3].slice(0, selectedActivities.length) : [],
         activities: selectedActivities.length > 0 ? selectedActivities : [],
