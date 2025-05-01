@@ -12,3 +12,4 @@ requests
 Pillow
 aiohttp
 asgiref
+httpx
