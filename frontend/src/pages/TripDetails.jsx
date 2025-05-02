@@ -1,25 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTripById } from "../api"; // You should define this API helper
-//import AddUserImage from "../assets/add-user.png";
-
-function daysUntil(dateString) {
-  const today = new Date();
-  const target = new Date(dateString);
-  const diffTime = target - today;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-}
-
-function getDateRange(start, end) {
-  const range = [];
-  let current = new Date(start);
-  const last = new Date(end);
-  while (current <= last) {
-    range.push(new Date(current));
-    current.setDate(current.getDate() + 1);
-  }
-  return range;
-}
+import { getTripById } from "../api";
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 function formatDateRange(start, end) {
   const format = (dateStr) => {
@@ -31,38 +13,32 @@ function formatDateRange(start, end) {
 
 function TripDetails() {
   const { tripId } = useParams();
-  //console.log('Trip ID from URL:', tripId);
   const [trip, setTrip] = useState(null);
-  const [suggestedEvents, setSuggestedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedDay, setExpandedDay] = useState(null);
+
+  const toggleDay = (date) => {
+    setExpandedDay((prev) => (prev === date ? null : date));
+  };
 
   useEffect(() => {
     const fetchTripDetails = async () => {
       try {
         const tripData = await getTripById(tripId);
-        console.log('Fetched trip data:', tripData);
         setTrip(tripData);
-
-        // Optionally fetch Yelp/Ticketmaster events based on trip location
-        // if (tripData.location) {
-        //   const events = await getYelpActivities(tripData.location);
-        //   setSuggestedEvents(events.slice(0, 5)); // Limit to 5 events
-        // }
       } catch (error) {
         console.error("Failed to load trip details:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTripDetails();
   }, [tripId]);
 
   if (loading) return <p>Loading trip data...</p>;
   if (!trip) return <p>Trip not found</p>;
 
-  const { location, start_date, end_date, activities, invited_users, days } = trip;
-  const tripDates = getDateRange(start_date, end_date);
+  const { location, start_date, end_date, invited_users, days } = trip;
 
   return (
     <>
@@ -91,75 +67,90 @@ function TripDetails() {
       </div>
 
       {/* === Daily Trip Sections === */}
-      {tripDates.map((date) => {
-        const dateStr = date.toISOString().split("T")[0];
-        const dayData = days.find((d) => d.date === dateStr);
-        const weather = dayData?.weather;
+      {days.map((day) => {
+        const date = new Date(day.date);
+        const isOpen = expandedDay === day.date;
+
+        const timeSlots = ["morning", "lunch", "afternoon", "dinner", "evening", "night"];
+        const slotMap = {};
+        timeSlots.forEach(slot => slotMap[slot] = []);
+
+        day.activities.forEach((activity) => {
+          if (slotMap[activity.time_slot]) {
+            slotMap[activity.time_slot].push(activity);
+          }
+        });
 
         return (
-          <div key={dateStr} className="mb-10 p-4 border rounded shadow">
-            <h3 className="text-xl font-bold text-orange-500 mb-4">{dateStr}</h3>
+          <div key={day.date} className="mb-6 border rounded shadow">
+            {/* Header with dropdown */}
+            <div
+              className="flex justify-between items-center px-4 py-3 bg-gray-100 cursor-pointer"
+              onClick={() => toggleDay(day.date)}
+            >
+              <h3 className="text-lg font-bold text-orange-600">
+                {date.toLocaleDateString(undefined, {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </h3>
+              {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
 
-            {/* WEATHER SECTION */}
-            <div className="mb-4">
-              <h4 className="text-lg font-semibold mb-2">Weather Forecast</h4>
-              {weather ? (
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {/* This will be 1 weather card for the whole day for now (one block) */}
-                  <div
-                    className="flex flex-col justify-between items-center bg-blue-100 text-blue-800 rounded-[50px] px-2 py-4 shadow-md"
-                    style={{ width: "103px", height: "183px", minWidth: "103px" }}
-                  >
-                    <p className="text-sm font-semibold">
-                      {/* Hardcode a time for now, like "12:00" */}
-                      12:00
-                    </p>
-                    <p className="text-md my-2 italic">
-                      {/* Use the description text */}
-                      {weather.description || 'Clear'}
-                    </p>
-                    <p className="text-lg font-bold">
-                      {/* Temperature */}
-                      {weather.temperature ? `${weather.temperature.toFixed(0)}°` : 'N/A'}
+            {isOpen && (
+              <div className="p-4 flex flex-col gap-6">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* Selected Plan */}
+                  <div className="flex-1 border p-4 rounded">
+                    <h4 className="text-md font-semibold mb-2">Selected Plan</h4>
+                    {day.activities.filter(a => !a.activity.source || (a.activity.source !== 'YELP' && a.activity.source !== 'TICKETMASTER')).length > 0 ? (
+                      <ul className="list-disc ml-5">
+                        {day.activities.filter(a => !a.activity.source || (a.activity.source !== 'YELP' && a.activity.source !== 'TICKETMASTER')).map((a) => (
+                          <li key={a.id}>{a.activity.name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="italic text-gray-500">No activities selected.</p>
+                    )}
+                  </div>
+
+                  {/* Forecast */}
+                  <div className="flex-1 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
+                    <h4 className="text-md font-bold mb-1">Forecast</h4>
+                    <p className="text-sm font-semibold">7 AM</p>
+                    <p className="italic text-md my-2">{day.weather?.description || 'Weather forecast'}</p>
+                    <p className="text-xl font-bold">
+                      {day.weather?.temperature ? `${day.weather.temperature.toFixed(0)}°` : 'N/A'}
                     </p>
                   </div>
                 </div>
-              ) : (
-                <p className="italic text-gray-500">No forecast available for this day.</p>
-              )}
-            </div>
 
-            {/* ACTIVITIES */}
-            <div className="mb-8">
-              <h4 className="text-lg font-semibold mb-2">Planned Activities</h4>
-              {activities.length > 0 ? (
-                <ul className="list-disc ml-5">
-                  {activities.map((a) => (
-                    <li key={a.id}>
-                      {a.name} {a.rating ? `— Rating: ${a.rating}` : ""}
-                    </li>
+                {/* Suggested Plan by Time Slot */}
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
+                  {timeSlots.map((slot) => (
+                    <div key={slot} className="mb-4">
+                      <h5 className="text-sm font-semibold capitalize mb-1">{slot}</h5>
+                      {slotMap[slot].filter(a => a.activity.source === 'YELP' || a.activity.source === 'TICKETMASTER').length > 0 ? (
+                        <ul className="list-disc ml-5">
+                          {slotMap[slot].filter(a => a.activity.source === 'YELP' || a.activity.source === 'TICKETMASTER').map((a) => (
+                            <li key={a.id}>
+                              <span className="font-semibold">{a.activity.name}</span>
+                              {a.activity.categories?.length > 0 && (
+                                <span className="text-sm text-gray-600 italic"> — {a.activity.categories.join(", ")}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm italic text-gray-500">No suggestions</p>
+                      )}
+                    </div>
                   ))}
-                </ul>
-              ) : (
-                <p className="italic text-gray-500">No activities planned.</p>
-              )}
-            </div>
-
-            {/* SUGGESTED EVENTS */}
-            <div>
-              <h4 className="text-lg font-semibold mb-2">Suggested Events</h4>
-              {suggestedEvents.length > 0 ? (
-                <ul className="list-disc ml-5">
-                  {suggestedEvents.map((event) => (
-                    <li key={event.id}>
-                      {event.name} — {event.categories.join(", ")} — {event.rating}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="italic text-gray-500">No suggested events found.</p>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
