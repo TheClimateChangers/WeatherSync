@@ -264,10 +264,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             )
         return super().retrieve(request, *args, **kwargs)
         
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'], url_path='me')
     def me(self, request):
         """
-        Get the current user's profile, for both Google and Django auth.
+        Get or update the current user's profile, for both Google and Django auth.
         """
         try:
             # The user is already authenticated through JWT, so we can access request.user
@@ -277,19 +277,24 @@ class UserProfileViewSet(viewsets.ModelViewSet):
             # Attempt to get the user's profile
             try:
                 profile = UserProfile.objects.get(user=user)
-                serializer = self.get_serializer(profile)
-                return Response(serializer.data)
             except UserProfile.DoesNotExist:
                 # If profile doesn't exist but user does, create one
                 logger.info(f"Creating new profile for user: {user.username}")
                 profile = UserProfile.objects.create(user=user)
+
+            if request.method == 'GET':
                 serializer = self.get_serializer(profile)
+                return Response(serializer.data)
+            elif request.method == 'PATCH':
+                serializer = self.get_serializer(profile, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
                 return Response(serializer.data)
                 
         except Exception as e:
-            logger.error(f"Error fetching profile for authenticated user: {str(e)}")
+            logger.error(f"Error in profile me endpoint: {str(e)}")
             return Response(
-                {"error": f"Could not retrieve profile: {str(e)}"},
+                {"error": f"Could not process profile request: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, followUser, getTrips } from '../api';
+import { getProfile, followUser, getTrips, updateProfile } from '../api';
 import { ACCESS_TOKEN } from '../constants';
 import '../styles/Profile.css';
 
@@ -11,12 +11,12 @@ function Profile() {
     const [tokenType, setTokenType] = useState(null);
     const [trips, setTrips] = useState([]);
     const [tripsLoading, setTripsLoading] = useState(false);
-    const [editingField, setEditingField] = useState(null);
-    const [newPassword, setNewPassword] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedProfile, setEditedProfile] = useState({
+        nickname: '',
+        bio: ''
+    });
     const navigate = useNavigate();
-
-    const [editedName, setEditedName] = useState('');
-    const [editedEmail, setEditedEmail] = useState('');
 
     useEffect(() => {
         const token = localStorage.getItem(ACCESS_TOKEN);
@@ -43,8 +43,10 @@ function Profile() {
         try {
             const profileData = await getProfile();
             setProfile(profileData);
-            setEditedName(profileData.username || '');
-            setEditedEmail(profileData.email || '');
+            setEditedProfile({
+                nickname: profileData.nickname || '',
+                bio: profileData.bio || ''
+            });
             setError(null);
             
             fetchUserTrips();
@@ -81,13 +83,27 @@ function Profile() {
         }
     };
 
-    const handleSave = () => {
-        setEditingField(null);
+    const handleEdit = () => {
+        setIsEditing(true);
     };
 
-    const handlePasswordReset = () => {
-        alert(`Password reset to: ${newPassword}`);
-        setNewPassword('');
+    const handleSave = async () => {
+        try {
+            await updateProfile(editedProfile);
+            setIsEditing(false);
+            fetchProfile(); // Refresh the profile data
+        } catch (err) {
+            console.error('Error updating profile:', err);
+            setError('Failed to update profile');
+        }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setEditedProfile({
+            nickname: profile.nickname || '',
+            bio: profile.bio || ''
+        });
     };
 
     if (loading) return <div className="profile-container">Loading profile...</div>;
@@ -109,71 +125,63 @@ function Profile() {
                     className="profile-picture"
                 />
                 <div className="profile-info">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Username</p>
-                            {editingField === 'name' ? (
-                                <input
-                                    value={editedName}
-                                    onChange={(e) => setEditedName(e.target.value)}
-                                    className="mt-1 border px-3 py-2 rounded-md w-full"
-                                />
-                            ) : (
-                                <p className="mt-1">{editedName}</p>
-                            )}
-                        </div>
-                        {editingField === 'name' ? (
-                            <button onClick={handleSave} className="ml-4 border px-4 py-2 rounded-md">
-                                Save
-                            </button>
-                        ) : (
-                            <button onClick={() => setEditingField('name')} className="ml-4 border px-4 py-2 rounded-md">
-                                Edit
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                        <div>
-                            <p className="text-sm text-gray-600 font-medium">Email</p>
-                            {editingField === 'email' ? (
-                                <input
-                                    value={editedEmail}
-                                    onChange={(e) => setEditedEmail(e.target.value)}
-                                    className="mt-1 border px-3 py-2 rounded-md w-full"
-                                />
-                            ) : (
-                                <p className="mt-1">{editedEmail}</p>
-                            )}
-                        </div>
-                        {editingField === 'email' ? (
-                            <button onClick={handleSave} className="ml-4 border px-4 py-2 rounded-md">
-                                Save
-                            </button>
-                        ) : (
-                            <button onClick={() => setEditingField('email')} className="ml-4 border px-4 py-2 rounded-md">
-                                Edit
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                        <div className="w-full">
-                            <p className="text-sm text-gray-600 font-medium">Password</p>
-                            <input
-                                type="password"
-                                placeholder="Enter new password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="mt-1 border px-3 py-2 rounded-md w-full"
-                            />
-                        </div>
-                        <button onClick={handlePasswordReset} className="ml-4 mt-6 border px-4 py-2 rounded-md">
-                            Reset
+                    <h1 className="text-2xl font-bold">{profile.username}</h1>
+                    
+                    {!isEditing ? (
+                        <button 
+                            onClick={handleEdit}
+                            className="edit-profile-btn"
+                        >
+                            Edit Profile
                         </button>
+                    ) : (
+                        <div className="edit-buttons">
+                            <button 
+                                onClick={handleSave}
+                                className="save-btn"
+                            >
+                                Save Changes
+                            </button>
+                            <button 
+                                onClick={handleCancel}
+                                className="cancel-btn"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="profile-fields">
+                        <div className="field">
+                            <label>Nickname</label>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    value={editedProfile.nickname}
+                                    onChange={(e) => setEditedProfile({...editedProfile, nickname: e.target.value})}
+                                    placeholder="Enter your nickname"
+                                />
+                            ) : (
+                                <p>{profile.nickname || 'No nickname set'}</p>
+                            )}
+                        </div>
+
+                        <div className="field">
+                            <label>Bio</label>
+                            {isEditing ? (
+                                <textarea
+                                    value={editedProfile.bio}
+                                    onChange={(e) => setEditedProfile({...editedProfile, bio: e.target.value})}
+                                    placeholder="Tell us about yourself"
+                                    rows="4"
+                                />
+                            ) : (
+                                <p>{profile.bio || 'No bio set'}</p>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="profile-stats mt-6">
+                    <div className="profile-stats">
                         <div><b>{followersCount}</b> Followers</div>
                         <div><b>{followingCount}</b> Following</div>
                         <div><b>{tripsCount}</b> Trips</div>
@@ -198,13 +206,13 @@ function Profile() {
                                     onClick={() => navigate(`/trips/${trip.id}`)}
                                     className="view-trip-btn"
                                 >
-                                    View Details
+                                    View Trip
                                 </button>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="no-trips-message">You haven't created any trips yet.</div>
+                    <p>No trips yet</p>
                 )}
             </div>
         </div>

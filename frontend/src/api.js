@@ -139,7 +139,7 @@ export const followUser = async (profileId) => {
 };
 
 export const updateProfile = async (profileData) => {
-    const response = await api.patch('/api/profiles/', profileData);
+    const response = await api.patch('/api/profiles/me/', profileData);
     return response.data;
 };
 

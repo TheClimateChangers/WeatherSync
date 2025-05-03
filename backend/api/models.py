@@ -141,6 +141,8 @@ class Trip(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+    nickname = models.CharField(max_length=50, blank=True, null=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
     followers = models.ManyToManyField(User, related_name='following_profiles', blank=True)
     following = models.ManyToManyField(User, related_name='followed_by', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
