@@ -11,6 +11,11 @@ function formatDateRange(start, end) {
   return `${format(start)} - ${format(end)}`;
 }
 
+function parseDateLocal(dateStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function TripDetails() {
   const { tripId } = useParams();
   const [trip, setTrip] = useState(null);
@@ -68,7 +73,7 @@ function TripDetails() {
 
       {/* === Daily Trip Sections === */}
       {days.map((day) => {
-        const date = new Date(day.date);
+        const date = parseDateLocal(day.date);
         const isOpen = expandedDay === day.date;
 
         const timeSlots = ["morning", "lunch", "afternoon", "dinner", "evening", "night"];

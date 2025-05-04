@@ -12,12 +12,20 @@ function TripsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const currentUserId = localStorage.getItem('DJANGO_USER_ID');
 
   useEffect(() => {
     const fetchTrips = async () => {
       try {
         const data = await getTrips();
-        setTrips(data);
+        // Only include trips where the user is the creator or is in invited_users
+        const filtered = data.filter(trip => {
+          const isCreator = trip.creator?.id?.toString() === currentUserId;
+          const isInvited = trip.invited_users?.some(user => user.id?.toString() === currentUserId);
+          return isCreator || isInvited;
+        });
+        setTrips(filtered);
+        //setTrips(data);
       } catch (error) {
         console.error('Error fetching trips:', error);
         setError('Failed to load trips');
@@ -27,7 +35,7 @@ function TripsList() {
     };
 
     fetchTrips();
-  }, []);
+  }, [currentUserId]);
 
   if (loading) return <div className="loading">Loading trips...</div>;
   if (error) return <div className="error">{error}</div>;
@@ -56,4 +64,5 @@ function TripsList() {
   );
 }
 
-export default TripsList; 
+export default TripsList;
+ 
