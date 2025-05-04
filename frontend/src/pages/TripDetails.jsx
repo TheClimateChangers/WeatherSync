@@ -131,7 +131,7 @@ function TripDetails() {
                   </div>
                 </div>
 
-                {/* Suggested Plan by Time Slot */}
+                {/* Suggested Plan */}
                 <div>
                   <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
                   {timeSlots.map((slot) => (
