@@ -30,7 +30,6 @@ from .yelp import get_yelp_results, parse_all_yelp
 from .ticketmaster import get_ticketmaster_events, parse_all_ticketmaster
 from .trip_manager import TripManager
 from asgiref.sync import async_to_sync
-from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -115,16 +114,15 @@ class TripViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        user = self.request.user
-        queryset = Trip.objects.filter(
-            Q(creator=user) | Q(invited_users=user)
-        ).distinct()
+        queryset = Trip.objects.all()
         location = self.request.query_params.get('location', None)
         creator_id = self.request.query_params.get('creator_id', None)
+        
         if location:
             queryset = queryset.filter(location__icontains=location)
         if creator_id:
             queryset = queryset.filter(creator_id=creator_id)
+            
         return queryset
 
     @action(detail=True, methods=['post'])
