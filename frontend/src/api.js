@@ -56,9 +56,8 @@ export const generateTrip = async (tripData) => {
             console.log('Trip created successfully:', createResponse.data);
             
             // Step 3: Generate the itinerary using the created trip's ID
-            const itineraryResponse = await axios.post(`${API_URL}/api/trips/${tripId}/generate_itinerary/`, {
-                trip_id: tripId,  // Pass the trip ID to the generate_itinerary endpoint
-            });
+            const itineraryResponse = await axios.post(`${API_URL}/api/trips/${tripId}/generate_itinerary/`, tripData);
+
             
             console.log('Itinerary generated successfully:', itineraryResponse.data);
             return itineraryResponse.data;

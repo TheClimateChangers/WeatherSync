@@ -119,7 +119,7 @@ class ItineraryBuilder:
         # OTHER TIMESLOTS
         for slot in timeslots:
             print(f"🔄 Processing timeslot: {slot}")
-            categories = random.sample(self.activities, 2)
+            categories = random.sample(self.activities, 2) if len(self.activities) > 2 else self.activities
             for category in categories:
                 print(f"  🔍 Checking category: {category}")
                 biz = await get_unique_business(self.pbiz[category]['businesses'])

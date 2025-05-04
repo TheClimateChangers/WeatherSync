@@ -146,7 +146,7 @@ class TripViewSet(viewsets.ModelViewSet):
             }
 
             # Generate itinerary using TripManager's method (which uses ItineraryBuilder)
-            schedule = async_to_sync(TripManager.generate_itinerary)(trip)
+            schedule = async_to_sync(TripManager.generate_itinerary)(user_data)
 
 
             # Optionally, save itinerary to the database here
