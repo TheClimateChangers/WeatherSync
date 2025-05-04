@@ -8,6 +8,9 @@ from .yelp import get_yelp_results, parse_yelp_results
 from .ticketmaster import get_ticketmaster_events, parse_ticketmaster_results
 from .weather import get_weather
 from .geocode import get_coordinates
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ItineraryBuilder:
     def __init__(self, user_data):

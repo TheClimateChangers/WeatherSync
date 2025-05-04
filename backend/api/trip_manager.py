@@ -2,15 +2,16 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from asgiref.sync import async_to_sync
 from datetime import datetime, timedelta
+import logging
 
 User = get_user_model()
-
+logger = logging.getLogger(__name__)
 class TripManager:
     
     @staticmethod
     async def generate_itinerary(trip):
         from .itinerary import ItineraryBuilder
-        
+        logger.info("TRIP MANAGER: preparing info")
         # Prepare the date range
         date_range = []
         current_date = datetime.strptime(trip['daterange'][0], "%Y-%m-%d").date()
@@ -18,7 +19,7 @@ class TripManager:
         location = trip.get('location')
         activities = trip.get('activities')
         events = trip.get('events')
-        
+        logger.info("TRIP MANAGER: preparing date")
         while current_date <= end_date:
             date_range.append(current_date.strftime("%Y-%m-%d"))
             current_date += timezone.timedelta(days=1)
@@ -30,7 +31,7 @@ class TripManager:
                 'activities': activities,
                 'events': events
             }"""
-        
+        logger.info("TRIP MANAGER: user_data")
         # Prepare user data for the ItineraryBuilder
         user_data = {
             'location': location,
@@ -41,6 +42,7 @@ class TripManager:
         
         # Generate the itinerary
         builder = ItineraryBuilder(user_data)
+        logger.info("TRIP MANAGER: build_schedule")
         schedule = await builder.build_schedule()
         
         return schedule

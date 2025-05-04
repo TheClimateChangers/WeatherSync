@@ -130,13 +130,16 @@ class TripViewSet(viewsets.ModelViewSet):
         """
         Generate an itinerary for an existing trip
         """
+        logger.info("VIEWS: generate_itinerary (self.get_object())")
         trip = self.get_object()
 
         try:
+            logger.info(f"VIEWS: Generating itinerary for trip: {trip.id}")
             # Optional: get custom activity types and events from request
+            logger.info("VIEWS: activities, events")
             activities = request.data.get('activities', ['Food & Drink', 'Arts & Culture', 'Nightlife'])
             events = request.data.get('events', ['Music', 'Sports', 'Art'])
-
+            logger.info("VIEWS: user_data")
             # Prepare user data for the ItineraryBuilder
             user_data = {
                 'location': trip.location,
@@ -144,11 +147,11 @@ class TripViewSet(viewsets.ModelViewSet):
                 'activities': activities,
                 'events': events
             }
-
+            logger.info("VIEWS: schedule")
             # Generate itinerary using TripManager's method (which uses ItineraryBuilder)
             schedule = async_to_sync(TripManager.generate_itinerary)(user_data)
 
-
+            logger.info("VIEWS: save_itinerary")
             # Optionally, save itinerary to the database here
             TripManager.save_itinerary(trip, schedule)
 
@@ -158,6 +161,7 @@ class TripViewSet(viewsets.ModelViewSet):
             )
 
         except Exception as e:
+            logger.error("VIEWS: Error")
             logger.error(f"Error generating itinerary: {str(e)}")
             return Response(
                 {"error": str(e)},
