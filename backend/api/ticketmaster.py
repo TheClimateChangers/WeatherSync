@@ -26,9 +26,10 @@ async def get_ticketmaster_events(location, day, events):
     params = {
         "apikey": TICKETMASTER_API_KEY,
         "city": location,  # location should be in "lat,long" format
-        "radius": 10,
+        "radius": 20,
         "unit": "miles",
         "localStartDateTime": day,  # start of the time range
+        "size": 5,
         "segmentName": ",".join(events),     # Join events with commas
     }
     logger.info(f"Querying Ticketmaster API for location {location} and events {events}")
@@ -42,6 +43,7 @@ async def get_ticketmaster_events(location, day, events):
                 # Check for '_embedded' in the response
                 if '_embedded' in data and 'events' in data['_embedded']:
                     logger.info(f"Found {len(data['_embedded']['events'])} events")
+                    print(f"Found {len(data['_embedded']['events'])} events")
                     return data['_embedded']['events']
                 else:
                     logger.warning("Ticketmaster API response doesn't contain '_embedded' or 'events'")

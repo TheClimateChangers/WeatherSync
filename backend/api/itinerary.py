@@ -91,21 +91,22 @@ class ItineraryBuilder:
 
         # EVENTS
         if self.events:
-            # event = await get_ticketmaster_events(self.location, ticketmaster_day, self.events)
-            # print("✅ Received Ticketmaster event:", type(event))
-            # print("✅ Event keys:", event.keys() if isinstance(event, dict) else "Not a dict")
-            # print("✅ Event _embedded value type:", type(event.get('_embedded')) if isinstance(event, dict) else "N/A")
-            # first_event = event[0]  # assuming the list contains one or more valid dicts
-            # event_parsed = parse_ticketmaster_results(first_event['_embedded']['events'][0])
+            events = await get_ticketmaster_events(self.location, ticketmaster_day, self.events)
+            print("TYPE EVENTS", type(events))
+            try:
+                first_event = events[0]  # assuming the list contains one or more valid dicts
+                event_parsed = parse_ticketmaster_results(first_event)
+                # event_parsed = parse_ticketmaster_results(event['_embedded']['events'][0])
+                print("✅ Parsed Ticketmaster event")
 
-            # # event_parsed = parse_ticketmaster_results(event['_embedded']['events'][0])
-            # print("✅ Parsed Ticketmaster event")
+                itinerary["evening"] = event_parsed
+                print('✅ Set itinerary["evening"]')
 
-            # itinerary["evening"] = event_parsed
-            # print('✅ Set itinerary["evening"]')
-
-            # timeslots.remove("evening")
-            pass
+                timeslots.remove("evening")
+            except IndexError as e:
+                print("No events found for the given date range.")
+                print(f"Error: {e}")
+            
 
         # NIGHTLIFE
         if "Nightlife" in self.activities:
