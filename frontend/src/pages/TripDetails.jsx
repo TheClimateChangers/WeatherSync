@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getTripById } from "../api";
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import ActivityItem from "../components/ActivityItem";
 
 function formatDateRange(start, end) {
   const format = (dateStr) => {
@@ -133,27 +134,32 @@ function TripDetails() {
 
                 {/* Suggested Plan */}
                 <div>
-                  <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
-                  {timeSlots.map((slot) => (
+                <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
+                {timeSlots.map((slot) => {
+                  const activities = slotMap[slot].filter(
+                    (a) => a.activity?.source === "YELP" || a.activity?.source === "TICKETMASTER"
+                  );
+
+                  return (
                     <div key={slot} className="mb-4">
                       <h5 className="text-sm font-semibold capitalize mb-1">{slot}</h5>
-                      {slotMap[slot].filter(a => a.activity.source === 'YELP' || a.activity.source === 'TICKETMASTER').length > 0 ? (
-                        <ul className="list-disc ml-5">
-                          {slotMap[slot].filter(a => a.activity.source === 'YELP' || a.activity.source === 'TICKETMASTER').map((a) => (
-                            <li key={a.id}>
-                              <span className="font-semibold">{a.activity.name}</span>
-                              {a.activity.categories?.length > 0 && (
-                                <span className="text-sm text-gray-600 italic"> — {a.activity.categories.join(", ")}</span>
-                              )}
+                      <ul className="list-none ml-5">
+                        {activities.length > 0 ? (
+                          activities.map((a) => (
+                            <li key={a.id} className="mb-2">
+                              <ActivityItem activity={a.activity} />
                             </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm italic text-gray-500">No suggestions</p>
-                      )}
+                          ))
+                        ) : (
+                          <li className="mb-2">
+                            <ActivityItem activity={null} />
+                          </li>
+                        )}
+                      </ul>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
               </div>
             )}
           </div>
