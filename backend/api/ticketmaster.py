@@ -4,6 +4,8 @@ import logging
 from datetime import datetime, timedelta
 import aiohttp
 import asyncio
+from dotenv import load_dotenv
+load_dotenv()
 
 # Get logger for this module
 logger = logging.getLogger('api')
@@ -15,8 +17,10 @@ async def get_ticketmaster_events(location, day, events):
     """
     Asynchronously query the Ticketmaster API for events based on location and time range.
     """
+    print("ENV TICKETMASTER_API_KEY =", TICKETMASTER_API_KEY)
+
     if not TICKETMASTER_API_KEY:
-        logger.error("TICKETMASTER_TICKETMASTER_API_KEY environment variable is not set")
+        logger.error("TICKETMASTER_API_KEY environment variable is not set")
         return {}
 
     if not location or not events:

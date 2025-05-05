@@ -175,7 +175,7 @@ function Plan() {
       
       // Extract city name from location (if it contains a comma)
 
-      const cityName = location.includes(',') ? location.split(',')[0] : location;
+      const cityName = location;
       
       console.log('City name:', cityName)
       const payload = {
