@@ -125,6 +125,10 @@ jobs:
 
         echo "Setting up frontend..."
         cd ~/WeatherSync/frontend
+        # Clean up before installation
+        rm -rf node_modules
+        rm -rf .vite
+        npm cache clean --force
         npm ci
         npm run build
 
