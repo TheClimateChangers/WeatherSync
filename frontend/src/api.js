@@ -233,5 +233,24 @@ export const getTripById = async (tripId) => {
       throw error;
     }
   };
+
+  export const getActivities = async (data) => {
+    try {
+        const { location, categories, limit=10, offset=0 } = data;
+
+        const response = await axios.get(`${API_URL}/api/yelp-activities/`, {
+            params: {
+                location: location,
+                categories: encodeURIComponent(categories),
+                limit: limit,
+                offset: offset
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching activities:', error);
+        throw error;
+    }
+  };
   
 export default api

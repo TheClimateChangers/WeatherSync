@@ -27,7 +27,7 @@ function TripDetails() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
 
   const toggleDay = (date) => {
@@ -43,6 +43,20 @@ function TripDetails() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openActivityModal = () => {
+    setShowActivityModal(true);
+  };
+
+  // Function to close modal
+  const closeActivityModal = () => {
+    setShowActivityModal(false);
+  };
+
+  const addToTrip = (activity) => {
+    // Logic to add the selected activity to the trip (e.g., update state or send to backend)
+    console.log('Adding activity to trip:', activity);
   };
 
   useEffect(() => {
@@ -161,7 +175,7 @@ function TripDetails() {
                   {/* Forecast */}
                   <div className="w-full lg:w-1/3 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
                     <br />
-                    <h4 className="text-xl font-bold mb-1">Forecast</h4>
+                    <h4 className="text-xl font-bold mb-1">Weather Forecast</h4>
                     <br />
                     <p>
                       <span className="text-lg">
@@ -174,7 +188,7 @@ function TripDetails() {
                       <span className="text-lg">
                         {day.weather?.rain_chance ? `Rain: ` : 'Rain: '}
                         <span className="font-bold text-xl">
-                          {day.weather?.rain_chance ? `${day.weather.rain_chance * 0.01}%` : 'N/A'}
+                          {day.weather?.rain_chance ? `${(day.weather.rain_chance * 0.01).toFixed(2)}%` : 'N/A'}
                         </span>
                       </span>
                       <br />
@@ -214,7 +228,7 @@ function TripDetails() {
                       <div key={slot} className="mb-4">
                         <div className="flex items-center justify-left">
                           <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
-                          <AddActivityButton onClick={() => setShowModal(true)} />
+                          <AddActivityButton onClick={() => setShowActivityModal(true)} />
                         </div>
                         <ul className="list-none ml-5">
                           {activities.length > 0 ? (
@@ -246,10 +260,15 @@ function TripDetails() {
         <button
           onClick={() => handleAddDay()}
           className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded-2xl shadow transition-all"
-        >
+          >
           + Add a Day
         </button>
-        <AddActivityModal isOpen={showModal} onClose={() => setShowModal(false)} />
+          <AddActivityModal 
+            isOpen={showActivityModal} 
+            onClose={closeActivityModal} 
+            addToTrip={addToTrip} 
+            location={trip.location}
+          />
       </div>
       <AddUserModal
         isOpen={showUserModal}

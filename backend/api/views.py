@@ -362,7 +362,7 @@ def get_yelp_data(request):
         return Response({"error": "Location, Categories required"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        yelp_data = get_yelp_results(location, categories, limit=limit, offset=offset)
+        yelp_data = async_to_sync(get_yelp_results)(location, categories, limit=limit, offset=offset)
         parsed = parse_all_yelp(yelp_data)
         return Response(parsed, status=status.HTTP_200_OK)
     except Exception as e:
@@ -385,7 +385,6 @@ def get_ticketmaster_data(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def create_or_get_user(request):
@@ -539,3 +538,22 @@ def delete_activity(request, activity_id):
     activity = get_object_or_404(Activity, id=activity_id)
     activity.delete()
     return Response(status=204)
+
+@api_view(['POST'])
+def add_activity_to_trip_day(request, trip_day_id):
+    """
+    Add an activity to a specific trip day.
+    """
+    trip_day = get_object_or_404(TripDay, id=trip_day_id)
+    activity_id = request.data.get('activity_id')
+    
+    if not activity_id:
+        return Response({"error": "Activity ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        activity = Activity.objects.get(id=activity_id)
+        day_activity = DayActivity.objects.create(activity=activity, trip_day=trip_day)
+        serializer = DayActivitySerializer(day_activity)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Activity.DoesNotExist:
+        return Response({"error": "Activity not found."}, status=status.HTTP_404_NOT_FOUND)
