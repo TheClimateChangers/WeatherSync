@@ -142,7 +142,7 @@ function TripDetails() {
                       <span className="text-lg">
                         {day.weather?.rain_chance ? `Rain: ` : 'Rain: '}
                         <span className="font-bold text-xl">
-                          {day.weather?.rain_chance ? `${day.weather.rain_chance}%` : 'N/A'}
+                          {day.weather?.rain_chance ? `${day.weather.rain_chance*.01}%` : 'N/A'}
                         </span>
                       </span>
                       <br />
