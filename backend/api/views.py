@@ -533,3 +533,9 @@ def delete_trip(request, trip_id):
 
     trip.delete()
     return Response(status=204)
+
+@api_view(['DELETE'])
+def delete_activity(request, activity_id):
+    activity = get_object_or_404(Activity, id=activity_id)
+    activity.delete()
+    return Response(status=204)

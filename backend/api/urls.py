@@ -13,7 +13,8 @@ from .views import (
     get_weather_data,
     add_next_trip_day,
     delete_trip_day,
-    delete_trip
+    delete_trip,
+    delete_activity
 )
 
 router = DefaultRouter()
@@ -33,5 +34,6 @@ urlpatterns = [
     path('weather-data/', get_weather_data, name='get-weather-data'),
     path('trips/<int:trip_id>/add-day/', add_next_trip_day, name='add-day-to-trip'),
     path("trips/<int:trip_id>/days/<int:day_id>/delete/", delete_trip_day, name="delete_trip_day"),
-    path('trips/<int:trip_id>/delete/', delete_trip, name='delete_trip')
+    path('trips/<int:trip_id>/delete/', delete_trip, name='delete_trip'),
+    path('activities/<int:activity_id>/delete/', delete_activity, name='delete_activity')
 ]

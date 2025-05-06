@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { deleteActivity } from "../api";
 
 function formatTime(timeStr) {
     const date = new Date(`1970-01-01T${timeStr}`);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
-function ActivityItem({ activity }) {
+function ActivityItem({ activity, onDelete }) {
   const [expanded, setExpanded] = useState(false);
 
   if (!activity) {
@@ -16,6 +17,16 @@ function ActivityItem({ activity }) {
     );
   }
 
+  const handleDelete = async (e) => {
+    e.stopPropagation(); // prevent click from expanding
+    try {
+      await deleteActivity(activity.trip_id, activity.id); // Assuming activity contains a trip_id and id
+      onDelete(activity.id); // Remove the activity from parent component's state
+    } catch (error) {
+      console.error("Error deleting activity:", error);
+    }
+  };
+
   return (
     <div
       onClick={() => setExpanded(!expanded)}
@@ -24,10 +35,7 @@ function ActivityItem({ activity }) {
       }`}
     >
       <button
-        onClick={(e) => {
-          e.stopPropagation(); // prevent click from expanding
-          // handle delete logic here
-        }}
+        onClick={handleDelete}
         className="absolute top-2 right-2 text-red-500 text-sm hover:underline hover:text-red-600"
         title="Delete activity"
       >

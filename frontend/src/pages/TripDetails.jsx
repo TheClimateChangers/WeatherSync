@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTripById, addNextTripDay, deleteTripDay } from "../api";
+import { getTripById, addNextTripDay, deleteTripDay, deleteActivity } from "../api"; // Add deleteActivity API
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ActivityItem from "../components/ActivityItem";
 import AddActivityButton from "../components/AddActivityButton";
@@ -58,18 +58,15 @@ function TripDetails() {
     }
   };
 
-  useEffect(() => {
-    fetchTripDetails();
-  }, [tripId]);
-
-  // Log day.weather to the console
-  useEffect(() => {
-    if (trip) {
-      trip.days.forEach((day) => {
-        console.log("Weather for the day:", day.weather);
-      });
+  const handleDeleteActivity = async (activityId, dayId) => {
+    try {
+      await deleteActivity(tripId, dayId, activityId); // Call your delete API
+      // Refresh the trip data or update local state to remove the deleted activity
+      fetchTripDetails();
+    } catch (error) {
+      console.error("Error deleting activity:", error);
     }
-  }, [trip]);
+  };
 
   if (loading) return <p>Loading trip data...</p>;
   if (!trip) return <p>Trip not found</p>;
@@ -87,21 +84,21 @@ function TripDetails() {
           </p> 
         </div>
         {/* Invited Users Section */}
-          <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="text-md font-semibold">Invited Users</h4>
-              <AddUsers onClick={() => setShowUserModal(true)} />
-            </div>
-            {invited_users.length > 0 ? (
-              <ul className="list-disc ml-5">
-                {invited_users.map((user) => (
-                  <li key={user.id}>{user.username}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="italic text-gray-500">No users invited.</p>
-            )}
+        <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-md font-semibold">Invited Users</h4>
+            <AddUsers onClick={() => setShowUserModal(true)} />
           </div>
+          {invited_users.length > 0 ? (
+            <ul className="list-disc ml-5">
+              {invited_users.map((user) => (
+                <li key={user.id}>{user.username}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="italic text-gray-500">No users invited.</p>
+          )}
+        </div>
       </div>
 
       {/* === Daily Trip Sections === */}
@@ -143,7 +140,6 @@ function TripDetails() {
                       fetchTripDetails();
                     } catch (err) {
                       console.error("Failed to delete trip day:", err);
-                      // Optionally show user feedback here
                     }
                   }}
                   className="absolute top-2 right-15 text-red-500 text-sm hover:underline hover:text-red-600"
@@ -158,16 +154,15 @@ function TripDetails() {
             {isOpen && (
               <div className="p-4 flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                <div className="w-full lg:w-2/3">
-                  {/* Map View */}
-                  <MapView activities={day.activities} location={location} />
+                  <div className="w-full lg:w-2/3">
+                    {/* Map View */}
+                    <MapView activities={day.activities} location={location} />
                   </div>
                   {/* Forecast */}
                   <div className="w-full lg:w-1/3 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
                     <br />
                     <h4 className="text-xl font-bold mb-1">Forecast</h4>
                     <br />
-                    {/* <p className="italic text-md my-2">{day.weather?.description || 'Weather forecast'}</p> */}
                     <p>
                       <span className="text-lg">
                         {day.weather?.temperature ? `Temperature: ` : 'Temperature: '}
@@ -179,7 +174,7 @@ function TripDetails() {
                       <span className="text-lg">
                         {day.weather?.rain_chance ? `Rain: ` : 'Rain: '}
                         <span className="font-bold text-xl">
-                          {day.weather?.rain_chance ? `${day.weather.rain_chance*.01}%` : 'N/A'}
+                          {day.weather?.rain_chance ? `${day.weather.rain_chance * 0.01}%` : 'N/A'}
                         </span>
                       </span>
                       <br />
@@ -205,49 +200,51 @@ function TripDetails() {
                       </span>
                     </p>
                   </div>
-
-                
                 </div>
 
                 {/* Suggested Plan */}
                 <div>
-                <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
-                {timeSlots.map((slot) => {
-                  const activities = slotMap[slot].filter(
-                    (a) => a.activity?.source === "YELP" || a.activity?.source === "TICKETMASTER"
-                  );
+                  <h4 className="text-md font-semibold mb-2">Suggested Plan</h4>
+                  {timeSlots.map((slot) => {
+                    const activities = slotMap[slot].filter(
+                      (a) => a.activity?.source === "YELP" || a.activity?.source === "TICKETMASTER"
+                    );
 
-                  return (
-                    <div key={slot} className="mb-4">
-                      <div className="flex items-center justify-left">
-                        <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
+                    return (
+                      <div key={slot} className="mb-4">
+                        <div className="flex items-center justify-left">
+                          <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
                           <AddActivityButton onClick={() => setShowModal(true)} />
-                      </div>
-                      <ul className="list-none ml-5">
-                        {activities.length > 0 ? (
-                          activities.map((a) => (
-                            <li key={a.id} className="mb-2">
-                              <ActivityItem activity={a.activity} />
+                        </div>
+                        <ul className="list-none ml-5">
+                          {activities.length > 0 ? (
+                            activities.map((a) => (
+                              <li key={a.id} className="mb-2">
+                                <ActivityItem
+                                  activity={a.activity}
+                                  onDelete={() => handleDeleteActivity(a.id, day.id)} // Pass delete function here
+                                />
+                              </li>
+                            ))
+                          ) : (
+                            <li className="mb-2">
+                              <ActivityItem activity={null} />
                             </li>
-                          ))
-                        ) : (
-                          <li className="mb-2">
-                            <ActivityItem activity={null} />
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
+                          )}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
         );
       })}
+
       <div className="flex justify-center mt-8">
         <button
-          onClick={() => handleAddDay(tripId)}
+          onClick={() => handleAddDay()}
           className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded-2xl shadow transition-all"
         >
           + Add a Day
@@ -255,13 +252,11 @@ function TripDetails() {
         <AddActivityModal isOpen={showModal} onClose={() => setShowModal(false)} />
       </div>
       <AddUserModal
-  isOpen={showUserModal}
-  onClose={() => setShowUserModal(false)}
-  onAddUser={(user) => console.log("User added:", user)}
-/>
-
+        isOpen={showUserModal}
+        onClose={() => setShowUserModal(false)}
+        onAddUser={(user) => console.log("User added:", user)}
+      />
     </>
-    
   );
 }
 
