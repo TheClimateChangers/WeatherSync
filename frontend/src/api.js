@@ -213,5 +213,15 @@ export const getTripById = async (tripId) => {
       throw error;
     }
   };
+
+  export const deleteTrip = async (tripId) => {
+    try {
+      const response = await axios.delete(`${API_URL}/api/trips/${tripId}/delete/`);
+      return response.data; // Success message
+    } catch (error) {
+      console.error('Error deleting trip:', error.response?.data?.error || error.message);
+      throw error;
+    }
+  };
   
 export default api

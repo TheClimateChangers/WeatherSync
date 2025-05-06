@@ -48,10 +48,12 @@ function TripsList() {
         {trips.map((trip) => (
           <div className="trip-card" key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)}>
             <div className="flex justify-end">
-              <DeleteTripButton onClick={(e) => {
-                e.stopPropagation();
-
-              }} />
+            <DeleteTripButton
+  tripId={trip.id}
+  onDeleteSuccess={(deletedId) => {
+    setTrips((prevTrips) => prevTrips.filter((t) => t.id !== deletedId));
+  }}
+/>
               </div>
             <div className="trip-card-content">
               

@@ -517,3 +517,19 @@ def delete_trip_day(request, trip_id, day_id):
         weather.delete()
 
     return JsonResponse({"message": "Trip day deleted successfully."}, status=204)
+
+@api_view(['DELETE'])
+def delete_trip(request, trip_id):
+    trip = get_object_or_404(Trip, id=trip_id)
+
+    # Clean up weather data (if not shared)
+    for day in trip.days.all():
+        if day.weather:
+            weather = day.weather
+            day.delete()
+            weather.delete()
+        else:
+            day.delete()
+
+    trip.delete()
+    return Response(status=204)
