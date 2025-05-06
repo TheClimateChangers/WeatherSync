@@ -10,8 +10,8 @@ function ActivityItem({ activity }) {
 
   if (!activity) {
     return (
-      <div className="p-3 bg-gray-200 text-gray-500 rounded-md mb-2 transform hover:scale-[1.02] transition-all duration-300">
-        + Add activity
+      <div className="p-3 bg-gray-200 text-gray-500 rounded-md mb-2">
+        No activities
       </div>
     );
   }

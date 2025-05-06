@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTrips } from '../api.js';
 import { useNavigate } from 'react-router-dom';
+import DeleteTripButton from './DeleteTripButton.jsx';
 
 function formatDate(dateString) {
   const [year, month, day] = dateString.split("-");
@@ -46,7 +47,14 @@ function TripsList() {
       <div className="trips-grid">
         {trips.map((trip) => (
           <div className="trip-card" key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)}>
+            <div className="flex justify-end">
+              <DeleteTripButton onClick={(e) => {
+                e.stopPropagation();
+
+              }} />
+              </div>
             <div className="trip-card-content">
+              
               <h3>Trip to {trip.location || "Unknown"}</h3>
               <p className="trip-creator">By: {trip.creator.username}</p>
               <p className="trip-dates">

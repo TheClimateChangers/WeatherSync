@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import { getTripById } from "../api";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ActivityItem from "../components/ActivityItem";
+import AddActivityButton from "../components/AddActivityButton";
+import AddUsers from "../components/AddUsers";
+
 
 function formatDateRange(start, end) {
   const format = (dateStr) => {
@@ -49,15 +52,31 @@ function TripDetails() {
   return (
     <>
       {/* Trip Title + Date Range + Users */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
+      <div className="flex flex-col lg:flex-row justify-between gap-6 mb-8">
+        <div className="flex-1">
           <h2 className="text-3xl font-bold">Trip to {location}</h2>
           <p className="text-gray-600 text-sm mt-1">
             {formatDateRange(start_date, end_date)}
-          </p>
+          </p> 
         </div>
+        {/* Invited Users Section */}
+                  <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-md font-semibold">Invited Users</h4>
+                      <AddUsers onClick={() => console.log("Add user clicked")} />
+                    </div>
+                    {invited_users.length > 0 ? (
+                      <ul className="list-disc ml-5">
+                        {invited_users.map((user) => (
+                          <li key={user.id}>{user.username}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="italic text-gray-500">No users invited.</p>
+                    )}
+                  </div>
 
-        {/* Invited Users */}
+        {/* Invited Users
         <div className="flex items-center gap-2">
           {invited_users.map((user, idx) => (
             <div
@@ -69,7 +88,7 @@ function TripDetails() {
               {user.username.charAt(0).toUpperCase()}
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* === Daily Trip Sections === */}
@@ -91,10 +110,10 @@ function TripDetails() {
           <div key={day.date} className="mb-6 border rounded shadow">
             {/* Header with dropdown */}
             <div
-              className="flex justify-between items-center px-4 py-3 bg-gray-100 cursor-pointer"
+              className="flex justify-between items-center rounded-2xl px-4 py-3 bg-gray-100 cursor-pointer"
               onClick={() => toggleDay(day.date)}
             >
-              <h3 className="text-lg font-bold text-orange-600">
+              <h3 className="text-lg font-bold text-orange-500">
                 {date.toLocaleDateString(undefined, {
                   weekday: 'long',
                   month: 'long',
@@ -108,19 +127,7 @@ function TripDetails() {
               <div className="p-4 flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row gap-4">
                   {/* Selected Plan */}
-                  <div className="flex-1 border p-4 rounded">
-                    <h4 className="text-md font-semibold mb-2">Selected Plan</h4>
-                    {day.activities.filter(a => !a.activity.source || (a.activity.source !== 'YELP' && a.activity.source !== 'TICKETMASTER')).length > 0 ? (
-                      <ul className="list-disc ml-5">
-                        {day.activities.filter(a => !a.activity.source || (a.activity.source !== 'YELP' && a.activity.source !== 'TICKETMASTER')).map((a) => (
-                          <li key={a.id}>{a.activity.name}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="italic text-gray-500">No activities selected.</p>
-                    )}
-                  </div>
-
+                  
                   {/* Forecast */}
                   <div className="flex-1 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
                     <h4 className="text-md font-bold mb-1">Forecast</h4>
@@ -142,7 +149,10 @@ function TripDetails() {
 
                   return (
                     <div key={slot} className="mb-4">
-                      <h5 className="text-sm font-semibold capitalize mb-1">{slot}</h5>
+                      <div className="flex items-center justify-left">
+                        <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
+                          <AddActivityButton onClick={() => {}} />
+                      </div>
                       <ul className="list-none ml-5">
                         {activities.length > 0 ? (
                           activities.map((a) => (
