@@ -11,6 +11,8 @@ from .views import (
     get_ticketmaster_data, 
     get_yelp_data, 
     get_weather_data,
+    add_next_trip_day,
+    delete_trip_day
 )
 
 router = DefaultRouter()
@@ -28,4 +30,6 @@ urlpatterns = [
     path('yelp-activities/', get_yelp_data, name='get-yelp-data'),
     path('ticketmaster-events/', get_ticketmaster_data, name='get-ticketmaster-data'),
     path('weather-data/', get_weather_data, name='get-weather-data'),
+    path('trips/<int:trip_id>/add-day/', add_next_trip_day, name='add-day-to-trip'),
+    path("trips/<int:trip_id>/days/<int:day_id>/delete/", delete_trip_day, name="delete_trip_day")
 ]

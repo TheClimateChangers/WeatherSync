@@ -19,7 +19,7 @@ api.interceptors.request.use(
     }
 )
 
-// const API_URL = import.meta.env.VITE_URL_API;
+// const API_URL = "http://127.0.0.1:8000";
 const API_URL = import.meta.env.VITE_URL_API;
 
 export const getWeather = async (location) => {
@@ -193,6 +193,25 @@ export const getTripById = async (tripId) => {
       throw error;
     }
   };
+
+  export const addNextTripDay = async (tripId) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/trips/${tripId}/add-day/`);
+      return response.data; // New day's data
+    } catch (error) {
+      console.error('Error adding next trip day:', error.response?.data?.error || error.message);
+      throw error;
+    }
+  };
   
+  export const deleteTripDay = async (tripId, dayId) => {
+    try {
+      const response = await axios.delete(`${API_URL}/api/trips/${tripId}/days/${dayId}/delete/`);
+      return response.data; // Success message
+    } catch (error) {
+      console.error('Error deleting trip day:', error.response?.data?.error || error.message);
+      throw error;
+    }
+  };
   
 export default api

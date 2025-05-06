@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTripById } from "../api";
+import { getTripById, addNextTripDay, deleteTripDay } from "../api";
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ActivityItem from "../components/ActivityItem";
 import AddActivityButton from "../components/AddActivityButton";
@@ -34,17 +34,31 @@ function TripDetails() {
     setExpandedDay((prev) => (prev === date ? null : date));
   };
 
+  const fetchTripDetails = async () => {
+    try {
+      const tripData = await getTripById(tripId);
+      setTrip(tripData);
+    } catch (error) {
+      console.error("Failed to load trip details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTripDetails = async () => {
-      try {
-        const tripData = await getTripById(tripId);
-        setTrip(tripData);
-      } catch (error) {
-        console.error("Failed to load trip details:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchTripDetails();
+  }, [tripId]);
+
+  const handleAddDay = async () => {
+    try {
+      await addNextTripDay(tripId);
+      await fetchTripDetails(); // Refresh trip data after adding a day
+    } catch (error) {
+      console.error("Error adding day:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchTripDetails();
   }, [tripId]);
 
@@ -121,9 +135,16 @@ function TripDetails() {
               </h3>
               <div className="flex justify-right">
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation(); // prevent click from expanding
-                    // handle delete logic here
+                    try {
+                      await deleteTripDay(tripId, day.id); // Call your delete API
+                      // Update local state to remove the deleted day
+                      fetchTripDetails();
+                    } catch (err) {
+                      console.error("Failed to delete trip day:", err);
+                      // Optionally show user feedback here
+                    }
                   }}
                   className="absolute top-2 right-15 text-red-500 text-sm hover:underline hover:text-red-600"
                   title="Delete activity"
@@ -139,7 +160,7 @@ function TripDetails() {
                 <div className="flex flex-col lg:flex-row gap-4">
                 <div className="w-full lg:w-2/3">
                   {/* Map View */}
-                  <MapView activities={day.activities} />
+                  <MapView activities={day.activities} location={location} />
                   </div>
                   {/* Forecast */}
                   <div className="w-full lg:w-1/3 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
@@ -226,7 +247,7 @@ function TripDetails() {
       })}
       <div className="flex justify-center mt-8">
         <button
-          onClick={() => console.log("Add a day clicked")}
+          onClick={() => handleAddDay(tripId)}
           className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded-2xl shadow transition-all"
         >
           + Add a Day

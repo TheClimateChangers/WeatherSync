@@ -25,11 +25,16 @@ from django.db import models
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework import serializers
 from rest_framework import permissions
-from .weather import get_weather
+from .weather import get_weather, get_default_weather
 from .yelp import get_yelp_results, parse_all_yelp
+from .geocode import get_coordinates
 from .ticketmaster import get_ticketmaster_events, parse_all_ticketmaster
 from .trip_manager import TripManager
 from asgiref.sync import async_to_sync
+from datetime import datetime, timedelta
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
 
 logger = logging.getLogger(__name__)
 
@@ -445,3 +450,70 @@ def create_or_get_user(request):
     except Exception as e:
         logger.error(f"Error in create_or_get_user: {str(e)}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def add_next_trip_day(request, trip_id):
+    trip = get_object_or_404(Trip, id=trip_id)
+
+    # Determine the next date to add
+    if trip.days.exists():
+        latest_day = trip.days.order_by('-date').first()
+        next_date = latest_day.date + timedelta(days=1)
+    else:
+        next_date = trip.start_date
+
+    # Prevent duplicate
+    if trip.days.filter(date=next_date).exists():
+        return JsonResponse({"error": "Day already exists."}, status=400)
+
+    # Extend trip end_date if necessary
+    if next_date > trip.end_date:
+        trip.end_date = next_date
+        trip.save()
+
+    # Get coordinates of the trip location (latitude and longitude)
+    lat, lon = async_to_sync(get_coordinates)(trip.location)
+
+    # Get weather data for the next day (fallback to default weather if API fails)
+    try:
+        weather_data = async_to_sync(get_weather)(lat, lon, next_date.strftime("%Y-%m-%d"))
+    except Exception as e:
+        print(f"Weather fetch failed: {e}")
+        weather_data = get_default_weather(next_date.strftime("%Y-%m-%d"), lat, lon)
+
+    # Create or update Weather object for the location and date
+    weather_obj, created = Weather.objects.get_or_create(
+        location=trip.location,
+        date=next_date,
+        defaults={
+            'temperature': weather_data["temperature"],
+            'description': "No description available",  # You can map a description here if available
+            'rain_chance': weather_data["precipitation"],  # Default weather function may not include this
+            'weather_conditions': {
+                "cloud_cover": weather_data["cloud_cover"],
+                "wind": weather_data["wind"],
+                "humidity": weather_data["humidity"],
+            }
+        }
+    )
+
+    # Create and add new day with weather
+    new_day = TripDay.objects.create(date=next_date, weather=weather_obj)
+    trip.days.add(new_day)
+
+    serializer = TripDaySerializer(new_day)
+    return JsonResponse(serializer.data, status=201)
+
+@api_view(['DELETE'])
+def delete_trip_day(request, trip_id, day_id):
+    day = get_object_or_404(TripDay, id=day_id)
+
+    # Delete the day and its associated weather data
+    weather = day.weather
+    day.delete()
+    
+    # Optionally delete the weather data if not used elsewhere
+    if weather:
+        weather.delete()
+
+    return JsonResponse({"message": "Trip day deleted successfully."}, status=204)
