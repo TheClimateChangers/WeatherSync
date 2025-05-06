@@ -44,7 +44,7 @@ function TripsList() {
 
   return (
     <div className="trips-container">
-      <div className="trips-grid">
+      <div className="trips-grid"> 
         {trips.map((trip) => (
           <div className="trip-card" key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)}>
             <div className="flex justify-end">

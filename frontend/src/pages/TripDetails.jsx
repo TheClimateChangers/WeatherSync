@@ -6,6 +6,8 @@ import ActivityItem from "../components/ActivityItem";
 import AddActivityButton from "../components/AddActivityButton";
 import AddUsers from "../components/AddUsers";
 import MapView from "../components/MapView";
+import AddActivityModal from "../components/AddActivityModal";
+import AddUserModal from "../components/AddUserModal";
 
 function formatDateRange(start, end) {
   const format = (dateStr) => {
@@ -25,6 +27,8 @@ function TripDetails() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   const toggleDay = (date) => {
     setExpandedDay((prev) => (prev === date ? null : date));
@@ -72,7 +76,7 @@ function TripDetails() {
           <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-md font-semibold">Invited Users</h4>
-              <AddUsers onClick={() => console.log("Add user clicked")} />
+              <AddUsers onClick={() => setShowUserModal(true)} />
             </div>
             {invited_users.length > 0 ? (
               <ul className="list-disc ml-5">
@@ -105,7 +109,7 @@ function TripDetails() {
           <div key={day.date} className="mb-6 rounded">
             {/* Header with dropdown */}
             <div
-              className="flex justify-between items-center rounded-2xl shadow px-4 py-3 bg-gray-100 cursor-pointer"
+              className="relative flex justify-between items-center rounded-2xl shadow px-4 py-3 bg-gray-100 cursor-pointer"
               onClick={() => toggleDay(day.date)}
             >
               <h3 className="text-lg font-bold text-orange-500">
@@ -115,6 +119,18 @@ function TripDetails() {
                   day: 'numeric',
                 })}
               </h3>
+              <div className="flex justify-right">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent click from expanding
+                    // handle delete logic here
+                  }}
+                  className="absolute top-2 right-15 text-red-500 text-sm hover:underline hover:text-red-600"
+                  title="Delete activity"
+                >
+                  Delete
+                </button>
+              </div>
               {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </div>
 
@@ -184,7 +200,7 @@ function TripDetails() {
                     <div key={slot} className="mb-4">
                       <div className="flex items-center justify-left">
                         <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
-                          <AddActivityButton onClick={() => {}} />
+                          <AddActivityButton onClick={() => setShowModal(true)} />
                       </div>
                       <ul className="list-none ml-5">
                         {activities.length > 0 ? (
@@ -208,7 +224,23 @@ function TripDetails() {
           </div>
         );
       })}
+      <div className="flex justify-center mt-8">
+        <button
+          onClick={() => console.log("Add a day clicked")}
+          className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-2 px-4 rounded-2xl shadow transition-all"
+        >
+          + Add a Day
+        </button>
+        <AddActivityModal isOpen={showModal} onClose={() => setShowModal(false)} />
+      </div>
+      <AddUserModal
+  isOpen={showUserModal}
+  onClose={() => setShowUserModal(false)}
+  onAddUser={(user) => console.log("User added:", user)}
+/>
+
     </>
+    
   );
 }
 
