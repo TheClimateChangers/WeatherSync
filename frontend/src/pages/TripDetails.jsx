@@ -44,6 +44,15 @@ function TripDetails() {
     fetchTripDetails();
   }, [tripId]);
 
+  // Log day.weather to the console
+  useEffect(() => {
+    if (trip) {
+      trip.days.forEach((day) => {
+        console.log("Weather for the day:", day.weather);
+      });
+    }
+  }, [trip]);
+
   if (loading) return <p>Loading trip data...</p>;
   if (!trip) return <p>Trip not found</p>;
 
@@ -60,35 +69,21 @@ function TripDetails() {
           </p> 
         </div>
         {/* Invited Users Section */}
-                  <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-md font-semibold">Invited Users</h4>
-                      <AddUsers onClick={() => console.log("Add user clicked")} />
-                    </div>
-                    {invited_users.length > 0 ? (
-                      <ul className="list-disc ml-5">
-                        {invited_users.map((user) => (
-                          <li key={user.id}>{user.username}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="italic text-gray-500">No users invited.</p>
-                    )}
-                  </div>
-
-        {/* Invited Users
-        <div className="flex items-center gap-2">
-          {invited_users.map((user, idx) => (
-            <div
-              key={user.id}
-              className="w-10 h-10 rounded-full bg-gray-300 text-xs flex items-center justify-center font-semibold text-white"
-              style={{ backgroundColor: ["#7E57C2", "#29B6F6", "#66BB6A"][idx % 3] }}
-              title={`@${user.username}`}
-            >
-              {user.username.charAt(0).toUpperCase()}
+          <div className="w-full lg:w-1/3 bg-gray-100 p-4 rounded shadow">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-md font-semibold">Invited Users</h4>
+              <AddUsers onClick={() => console.log("Add user clicked")} />
             </div>
-          ))}
-        </div> */}
+            {invited_users.length > 0 ? (
+              <ul className="list-disc ml-5">
+                {invited_users.map((user) => (
+                  <li key={user.id}>{user.username}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="italic text-gray-500">No users invited.</p>
+            )}
+          </div>
       </div>
 
       {/* === Daily Trip Sections === */}
@@ -132,13 +127,48 @@ function TripDetails() {
                   </div>
                   {/* Forecast */}
                   <div className="w-full lg:w-1/3 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
-                    <h4 className="text-md font-bold mb-1">Forecast</h4>
-                    <p className="text-sm font-semibold">7 AM</p>
-                    <p className="italic text-md my-2">{day.weather?.description || 'Weather forecast'}</p>
-                    <p className="text-xl font-bold">
-                      {day.weather?.temperature ? `${day.weather.temperature.toFixed(0)}°` : 'N/A'}
+                    <br />
+                    <h4 className="text-xl font-bold mb-1">Forecast</h4>
+                    <br />
+                    {/* <p className="italic text-md my-2">{day.weather?.description || 'Weather forecast'}</p> */}
+                    <p>
+                      <span className="text-lg">
+                        {day.weather?.temperature ? `Temperature: ` : 'Temperature: '}
+                        <span className="font-bold text-xl">
+                          {day.weather?.temperature ? `${day.weather.temperature.toFixed(0)}°` : 'N/A'}
+                        </span>
+                      </span>
+                      <br />
+                      <span className="text-lg">
+                        {day.weather?.rain_chance ? `Rain: ` : 'Rain: '}
+                        <span className="font-bold text-xl">
+                          {day.weather?.rain_chance ? `${day.weather.rain_chance}%` : 'N/A'}
+                        </span>
+                      </span>
+                      <br />
+                      <span className="text-lg">
+                        {day.weather?.weather_conditions.cloud_cover ? `Cloud Cover: ` : 'Cloud Cover: '}
+                        <span className="font-bold text-xl">
+                          {day.weather?.weather_conditions.cloud_cover ? `${day.weather.weather_conditions.cloud_cover}%` : 'N/A'}
+                        </span>
+                      </span>
+                      <br />
+                      <span className="text-lg">
+                        {day.weather?.weather_conditions.humidity ? `Humidity: ` : 'Humidity: '}
+                        <span className="font-bold text-xl">
+                          {day.weather?.weather_conditions.humidity ? `${day.weather.weather_conditions.humidity}%` : 'N/A'}
+                        </span>
+                      </span>
+                      <br />
+                      <span className="text-lg">
+                        {day.weather?.weather_conditions.wind ? `Wind: ` : 'Wind: '}
+                        <span className="font-bold text-xl">
+                          {day.weather?.weather_conditions.wind ? `${day.weather.weather_conditions.wind} mph` : 'N/A'}
+                        </span>
+                      </span>
                     </p>
                   </div>
+
                 
                 </div>
 

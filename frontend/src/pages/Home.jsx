@@ -17,31 +17,31 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Explore Section */}
+      {/* Mission Highlight Section */}
       <section className="explore-section">
-        <h2>Explore</h2>
+        <h2>How We Help You Travel Smarter</h2>
         <div className="explore-cards">
           <div className="explore-card">
-            <div className="card-image card-paris"></div>
+            <div className="card-image card-planning"></div>
             <div className="card-info">
-              <h4>Paris, France</h4>
-              <p>5 Days · Sunny</p>
+              <h4>Smart Planning</h4>
+              <p>We craft itineraries tailored to your travel goals and time.</p>
             </div>
           </div>
 
           <div className="explore-card">
-            <div className="card-image card-tokyo"></div>
+            <div className="card-image card-weather"></div>
             <div className="card-info">
-              <h4>Tokyo, Japan</h4>
-              <p>7 Days · Cloudy</p>
+              <h4>Weather-Synced</h4>
+              <p>Plan around live forecasts to enjoy the best of each day.</p>
             </div>
           </div>
 
           <div className="explore-card">
-            <div className="card-image card-rome"></div>
+            <div className="card-image card-tailored"></div>
             <div className="card-info">
-              <h4>Rome, Italy</h4>
-              <p>6 Days · Sunny</p>
+              <h4>Tailored to You</h4>
+              <p>Find adventures based on what you actually care about.</p>
             </div>
           </div>
         </div>
@@ -50,7 +50,7 @@ const Home = () => {
       {/* Mission Statement Section */}
       <section className="mission-section">
         <div className="mission-text">
-        <h3>Our Journey, Your Adventure</h3>
+          <h3>Our Journey, Your Adventure</h3>
           <p>
             At TripSync, we’re redefining travel planning. Our mission is to simplify
             your journey by building smart, personalized trip itineraries that sync
@@ -66,4 +66,3 @@ const Home = () => {
 };
 
 export default Home;
-

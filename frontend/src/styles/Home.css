@@ -56,6 +56,7 @@
 .plan-trip-button:hover {
   background-color: #ff7f00;
 }
+
 .explore-section {
   text-align: center;
   margin: 3rem 0;
@@ -88,9 +89,6 @@
   transition: transform 0.3s ease;
 }
 
-.explore-card:hover {
-  transform: scale(1.03);
-}
 
 .card-image {
   height: 66%;
@@ -115,7 +113,6 @@
   font-size: 0.85rem;
   color: #555;
 }
-
 
 .mission-section {
   display: flex;
@@ -152,14 +149,20 @@
   border-radius: 8px;
 }
 
-.card-paris {
-  background-image: url('../assets/paris.jpg');
+.card-planning {
+  background-image: url('../assets/Trip-planning.png');
+  background-size: cover;
+  background-position: center;
 }
 
-.card-tokyo {
-  background-image: url('../assets/tokyo.webp');
+.card-weather {
+  background-image: url('../assets/weather_home.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
-.card-rome {
-  background-image: url('../assets/rome.webp');
+.card-tailored {
+  background-image: url('../assets/tailored.webp');
+  background-size: cover;
+  background-position: center;
 }
