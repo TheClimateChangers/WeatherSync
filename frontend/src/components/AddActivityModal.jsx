@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { getActivities } from "../api"; // Import your getActivities function
+import { getActivities, createActivity, addActivityToTrip } from "../api"; // Import your getActivities function
 
-export default function AddActivityModal({ isOpen, onClose, addToTrip, location }) {
+export default function AddActivityModal({ isOpen, onClose, addToTrip, location, tripId, time_slot, date }) {
   const [activeTab, setActiveTab] = useState("search");
   const [searchTerm, setSearchTerm] = useState("");
   const [activities, setActivities] = useState([]);
@@ -11,6 +11,8 @@ export default function AddActivityModal({ isOpen, onClose, addToTrip, location 
   const [customName, setCustomName] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customLocation, setCustomLocation] = useState("");
+  const undate = new Date(date); // Convert to Date object
+  const formattedDate = undate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
 
   const trip_location =
     location && location.trim()
@@ -40,23 +42,70 @@ export default function AddActivityModal({ isOpen, onClose, addToTrip, location 
   };
 
   // Handle search-based activity selection
-  const handleActivitySelect = (activity) => {
-    addToTrip(activity);
-    onClose();
+  const handleActivitySelect = async (activity) => {
+    if (!activity) {
+        console.error("No activity selected");
+        return;
+    }
+    console.log("Selected activity:", activity);
+    const data = {
+        location: `${activity.location.city}, ${activity.location.state}`, // Combine city + state
+        name: activity.name,
+        rating: activity.rating,
+        price: null, // or activity.price if available
+        categories: [activity.category], // Make sure it's an array
+        address: activity.location.address,
+        phone: "555-123-4567", // Replace if you get real phone numbers
+        url: activity.url,
+        image_url: activity.image_url,
+        start_time: activity.open_hours?.open,
+        end_time: activity.open_hours?.close,
+        source: "YELP",
+        external_id: activity.id
+      };
+      try {
+        const createdActivity = await createActivity(data); // Wait for activity to be created
+        console.log("Created activity id:", createdActivity.id);
+        console.log("Trip ID:", tripId);
+        console.log("Time slot:", time_slot);
+        console.log("Date:", formattedDate);
+        await addActivityToTrip(tripId, createdActivity.id, time_slot, formattedDate); // Use the created activity, which has `id`
+        onClose();
+      } catch (error) {
+        console.error("Failed to add activity to trip:", error);
+      }
   };
 
   // Handle custom activity submission
-  const handleCustomSubmit = (e) => {
+  const handleCustomSubmit = async (e) => {
     e.preventDefault();
+    console.log("location", location);
     const customActivity = {
-      id: `custom-${Date.now()}`, // Unique ID
-      name: customName,
-      description: customDescription,
-      location: customLocation,
-      isCustom: true,
+        location: location,
+        name: customName,
+        rating: null,
+        price: null,
+        categories: customDescription,
+        address: customLocation,
+        phone: "555-123-4567",
+        url: "https:traveltripsync.com",
+        image_url: "https://traveltripsync.com/static/media/logo.0b1f2c4a.png",
+        start_time: null,
+        end_time: null,
+        source: "YELP",
+        external_id: null,
     };
-    addToTrip(customActivity);
-    onClose();
+    try {
+        const createdActivity = await createActivity(customActivity);
+        console.log("Created activity id:", createdActivity.id);
+        console.log("Trip ID:", tripId);
+        console.log("Time slot:", time_slot);
+        console.log("Date:", formattedDate);
+        await addActivityToTrip(tripId, createdActivity.id, time_slot, formattedDate);
+        onClose();
+    } catch (error) {
+        console.error("Failed to add custom activity to trip:", error);
+    }
 
     // Reset custom form
     setCustomName("");

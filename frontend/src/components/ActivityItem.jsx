@@ -53,7 +53,7 @@ function ActivityItem({ activity, onDelete }) {
         <span className="font-semibold">{activity.name}</span>
         {activity.categories?.length > 0 && (
           <span className="text-sm text-gray-600 italic">
-            {" — "}{activity.categories.join(", ")}
+            {" — "}{activity.categories}
           </span>
         )}
         <a

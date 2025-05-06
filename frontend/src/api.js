@@ -98,10 +98,12 @@ export const getTrips = async () => {
     }
 };
 
-export const addActivityToTrip = async (tripId, activityId) => {
+export const addActivityToTrip = async (tripId, activity_id, time_slot, date) => {
     try {
         const response = await axios.post(`${API_URL}/api/trips/${tripId}/add_activity/`, {
-            activity_id: activityId
+            activity_id: activity_id, time_slot,
+            time_slot: time_slot,
+            date: date
         });
         return response.data;
     } catch (error) {
@@ -249,6 +251,29 @@ export const getTripById = async (tripId) => {
         return response.data;
     } catch (error) {
         console.error('Error fetching activities:', error);
+        throw error;
+    }
+  };
+
+  export const createActivity = async (activityData) => {
+    try {
+        const response = await axios.post(`${API_URL}/api/activities/`, activityData);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating activity:', error);
+        throw error;
+    }
+  };
+//trip_days/<int:tripDayId>/add-activity/
+  export const addActivityToTripDay = async (trip_day_id, activity_id, time_slot) => {
+    try {
+        const response = await axios.post(`${API_URL}/api/trip_days/${trip_day_id}/add_activity/`, {
+            activity_id: activity_id,
+            time_slot: time_slot,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding activity to trip:', error);
         throw error;
     }
   };

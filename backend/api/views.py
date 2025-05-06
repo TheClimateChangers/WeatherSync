@@ -539,21 +539,57 @@ def delete_activity(request, activity_id):
     activity.delete()
     return Response(status=204)
 
+# ${API_URL}/api/trips/${tripId}/add_activity/
 @api_view(['POST'])
-def add_activity_to_trip_day(request, trip_day_id):
+def add_activity_to_trip(request, trip_id):
     """
-    Add an activity to a specific trip day.
+    Add an existing activity to a specific trip day and time slot.
     """
-    trip_day = get_object_or_404(TripDay, id=trip_day_id)
+    time_slot = request.data.get('time_slot')
     activity_id = request.data.get('activity_id')
-    
-    if not activity_id:
-        return Response({"error": "Activity ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    date_str = request.data.get('date')  # expected format: 'YYYY-MM-DD'
+
+    if not all([time_slot, activity_id, date_str]):
+        return Response({'error': 'Missing required fields: time_slot, activity_id, or date'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        trip = Trip.objects.get(id=trip_id)
+    except Trip.DoesNotExist:
+        return Response({'error': 'Trip not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not (trip.start_date <= date <= trip.end_date):
+        return Response({'error': 'Date is outside the trip range'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         activity = Activity.objects.get(id=activity_id)
-        day_activity = DayActivity.objects.create(activity=activity, trip_day=trip_day)
-        serializer = DayActivitySerializer(day_activity)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
     except Activity.DoesNotExist:
-        return Response({"error": "Activity not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Activity not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Get or create the TripDay for the given date
+    trip_day = trip.days.filter(date=date).first()
+    if not trip_day:
+        trip_day = TripDay.objects.create(date=date)
+        trip.days.add(trip_day)
+
+    # Create the DayActivity
+    day_activity = DayActivity.objects.create(
+        activity=activity,
+        time_slot=time_slot
+    )
+
+    # Link DayActivity to TripDay and Activity to Trip
+    trip_day.activities.add(day_activity)
+    trip.activities.add(activity)
+
+    return Response({
+        'message': 'Activity added to trip',
+        'activity': day_activity.activity.name,
+        'time_slot': day_activity.get_time_slot_display(),
+        'trip_day': str(trip_day.date)
+    }, status=status.HTTP_201_CREATED)
+

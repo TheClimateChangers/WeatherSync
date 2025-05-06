@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { getTripById, addNextTripDay, deleteTripDay, deleteActivity } from "../api"; // Add deleteActivity API
+import { getTripById, addNextTripDay, deleteTripDay, deleteActivity, addActivityToTripDay } from "../api"; // Add deleteActivity API
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ActivityItem from "../components/ActivityItem";
 import AddActivityButton from "../components/AddActivityButton";
@@ -29,6 +29,8 @@ function TripDetails() {
   const [expandedDay, setExpandedDay] = useState(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [currentDate, setCurrentDate] = useState(null);
+  const [currentTimeSlot, setCurrentTimeSlot] = useState(null);
 
   const toggleDay = (date) => {
     setExpandedDay((prev) => (prev === date ? null : date));
@@ -45,6 +47,12 @@ function TripDetails() {
     }
   };
 
+  const handleAddActivityClick = (date, slot) => {
+    setCurrentDate(date);
+    setCurrentTimeSlot(slot);
+    setShowActivityModal(true);
+  };
+
   const openActivityModal = () => {
     setShowActivityModal(true);
   };
@@ -54,9 +62,11 @@ function TripDetails() {
     setShowActivityModal(false);
   };
 
-  const addToTrip = (activity) => {
+  const addToTrip = async (trip_day_id, activity_id, time_slot, date) => {
     // Logic to add the selected activity to the trip (e.g., update state or send to backend)
     console.log('Adding activity to trip:', activity);
+    await addActivityToTripDay(trip_day_id, activity_id, time_slot, date);
+
   };
 
   useEffect(() => {
@@ -85,7 +95,9 @@ function TripDetails() {
   if (loading) return <p>Loading trip data...</p>;
   if (!trip) return <p>Trip not found</p>;
 
-  const { location, start_date, end_date, invited_users, days } = trip;
+  const { location, start_date, end_date, invited_users, days, id } = trip;
+  console.log("Trip data:", trip); // Debugging line
+  console.log("ID:", id); // Debugging line
 
   return (
     <>
@@ -228,7 +240,7 @@ function TripDetails() {
                       <div key={slot} className="mb-4">
                         <div className="flex items-center justify-left">
                           <h5 className="text-md font-semibold capitalize mb-1">{slot}</h5>
-                          <AddActivityButton onClick={() => setShowActivityModal(true)} />
+                          <AddActivityButton onClick={() => handleAddActivityClick(date, slot)} />
                         </div>
                         <ul className="list-none ml-5">
                           {activities.length > 0 ? (
@@ -263,11 +275,14 @@ function TripDetails() {
           >
           + Add a Day
         </button>
-          <AddActivityModal 
-            isOpen={showActivityModal} 
-            onClose={closeActivityModal} 
-            addToTrip={addToTrip} 
+          <AddActivityModal
+            isOpen={showActivityModal}
+            onClose={closeActivityModal}
+            addToTrip={addToTrip}
             location={trip.location}
+            tripId={id}
+            time_slot={currentTimeSlot}
+            date={currentDate}
           />
       </div>
       <AddUserModal
