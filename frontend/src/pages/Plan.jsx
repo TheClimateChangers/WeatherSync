@@ -269,9 +269,9 @@ function Plan() {
               onClick={() => toggleItem(event, setSelectedEvents)}
               style={{
                 padding: "10px",
-                border: `2px solid ${selectedEvents.includes(event) ? "#4CAF50" : "#ccc"}`,
+                border: `2px solid ${selectedEvents.includes(event) ? "#FFA726" : "#ccc"}`,
                 borderRadius: "10px",
-                backgroundColor: selectedEvents.includes(event) ? "#e8f5e9" : "#f9f9f9",
+                backgroundColor: selectedEvents.includes(event) ? "#ffd6ab" : "#f9f9f9",
                 cursor: "pointer",
                 transition: "0.2s ease",
               }}
