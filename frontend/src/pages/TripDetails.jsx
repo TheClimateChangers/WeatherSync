@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import ActivityItem from "../components/ActivityItem";
 import AddActivityButton from "../components/AddActivityButton";
 import AddUsers from "../components/AddUsers";
-
+import MapView from "../components/MapView";
 
 function formatDateRange(start, end) {
   const format = (dateStr) => {
@@ -107,10 +107,10 @@ function TripDetails() {
         });
 
         return (
-          <div key={day.date} className="mb-6 border rounded shadow">
+          <div key={day.date} className="mb-6 rounded">
             {/* Header with dropdown */}
             <div
-              className="flex justify-between items-center rounded-2xl px-4 py-3 bg-gray-100 cursor-pointer"
+              className="flex justify-between items-center rounded-2xl shadow px-4 py-3 bg-gray-100 cursor-pointer"
               onClick={() => toggleDay(day.date)}
             >
               <h3 className="text-lg font-bold text-orange-500">
@@ -126,10 +126,12 @@ function TripDetails() {
             {isOpen && (
               <div className="p-4 flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  {/* Selected Plan */}
-                  
+                <div className="w-full lg:w-2/3">
+                  {/* Map View */}
+                  <MapView activities={day.activities} />
+                  </div>
                   {/* Forecast */}
-                  <div className="flex-1 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
+                  <div className="w-full lg:w-1/3 bg-blue-100 text-blue-800 rounded px-4 py-4 text-center shadow">
                     <h4 className="text-md font-bold mb-1">Forecast</h4>
                     <p className="text-sm font-semibold">7 AM</p>
                     <p className="italic text-md my-2">{day.weather?.description || 'Weather forecast'}</p>
@@ -137,6 +139,7 @@ function TripDetails() {
                       {day.weather?.temperature ? `${day.weather.temperature.toFixed(0)}°` : 'N/A'}
                     </p>
                   </div>
+                
                 </div>
 
                 {/* Suggested Plan */}
